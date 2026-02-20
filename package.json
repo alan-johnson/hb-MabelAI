@@ -1,0 +1,55 @@
+{
+  "name": "hb-claude-ai",
+  "author": "handsbreadth LLC",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "hb-claudeAI",
+    "uuid": "a1253abf-48bd-4bb1-a9d6-b866b60595e1",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint"
+    ],
+    "capabilities": ["microphone"],
+    "watchapp": {
+      "watchface": false,
+      "configurable": true
+    },
+    "messageKeys": {
+      "KEY_QUERY":    0,
+      "KEY_RESPONSE": 1,
+      "KEY_STATUS":   2
+    },
+    "resources": {
+      "media": [
+      {
+        "type": "bitmap",
+        "name": "CAPT_CLAUDE",
+        "file": "images/capt_claude_svg.png"
+      },
+      {
+        "type": "bitmap",
+        "name": "ICON_MIC",
+        "file": "images/icon_mic.png"
+      },
+      {
+        "type": "bitmap",
+        "name": "ICON_UP",
+        "file": "images/icon_up.png"
+      },
+      {
+        "type": "bitmap",
+        "name": "ICON_DOWN",
+        "file": "images/icon_down.png"
+      }
+    ]
+    }
+  }
+}
