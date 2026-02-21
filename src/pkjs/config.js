@@ -2,21 +2,20 @@
 // Returns a self-contained data URI that opens in the Pebble app's webview.
 
 function getConfigPageUrl(settings) {
-  var apiKey     = settings.apiKey     || '';
-  var model      = settings.model      || 'claude-haiku-4-5-20251001';
-  var maxTokens  = settings.maxTokens  || 300;
-  var maxHistory = settings.maxHistory != null ? settings.maxHistory : 4;
+  var provider      = settings.provider      || 'claude';
+  var claudeApiKey  = settings.claudeApiKey  || '';
+  var geminiApiKey  = settings.geminiApiKey  || '';
+  var chatgptApiKey = settings.chatgptApiKey || '';
+  var model         = settings.model         || 'claude-haiku-4-5-20251001';
+  var maxTokens     = settings.maxTokens     || 300;
+  var maxHistory    = settings.maxHistory    != null ? settings.maxHistory : 4;
 
   function esc(str) {
     return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
-  function opt(value, label) {
-    return '<option value="' + value + '"' + (model === value ? ' selected' : '') + '>' + label + '</option>';
+      .replace(/&/g,  '&amp;')
+      .replace(/"/g,  '&quot;')
+      .replace(/</g,  '&lt;')
+      .replace(/>/g,  '&gt;');
   }
 
   var histLabel = maxHistory + (maxHistory === 1 ? ' turn' : ' turns');
@@ -25,7 +24,7 @@ function getConfigPageUrl(settings) {
     '<!DOCTYPE html><html><head>',
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
-    '<title>Claude AI Settings</title>',
+    '<title>AI Settings</title>',
     '<style>',
     '*{box-sizing:border-box;margin:0;padding:0}',
     'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#111;color:#eee;padding:16px 16px 40px}',
@@ -35,6 +34,9 @@ function getConfigPageUrl(settings) {
     '.field{margin-top:14px}',
     'input[type=password],select{width:100%;padding:9px 10px;background:#2a2a2a;color:#eee;border:1px solid #3a3a3a;border-radius:6px;font-size:15px;-webkit-appearance:none;appearance:none}',
     'select{background-image:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\'%3E%3Cpath d=\'M0 0l6 8 6-8z\' fill=\'%23888\'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}',
+    '.providers{display:flex;gap:8px;margin-bottom:2px}',
+    '.provider-btn{flex:1;padding:9px 4px;background:#2a2a2a;color:#888;border:1px solid #3a3a3a;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:background .15s,color .15s,border-color .15s}',
+    '.provider-btn.active{background:#f90;color:#000;border-color:#f90}',
     'input[type=range]{width:100%;margin:8px 0 4px;accent-color:#f90}',
     '.range-row{display:flex;justify-content:space-between;align-items:baseline}',
     '.range-val{color:#f90;font-size:13px;font-weight:600}',
@@ -43,21 +45,32 @@ function getConfigPageUrl(settings) {
     '.hint{font-size:11px;color:#555;margin-top:5px}',
     '</style></head><body>',
 
-    '<h1>Claude AI Settings</h1>',
+    '<h1>AI Settings</h1>',
 
+    // ---- Provider selector ----
     '<div class="card">',
-    '<label>API Key</label>',
-    '<input type="password" id="apiKey" placeholder="sk-ant-api03-..." value="' + esc(apiKey) + '">',
-    '<p class="hint">Found at console.anthropic.com</p>',
+    '<label>Provider</label>',
+    '<div class="providers">',
+    '<div class="provider-btn' + (provider === 'claude'  ? ' active' : '') + '" id="btn-claude"  onclick="setProvider(\'claude\')">Claude</div>',
+    '<div class="provider-btn' + (provider === 'gemini'  ? ' active' : '') + '" id="btn-gemini"  onclick="setProvider(\'gemini\')">Gemini</div>',
+    '<div class="provider-btn' + (provider === 'chatgpt' ? ' active' : '') + '" id="btn-chatgpt" onclick="setProvider(\'chatgpt\')">ChatGPT</div>',
+    '</div>',
+    '<input type="hidden" id="provider" value="' + esc(provider) + '">',
     '</div>',
 
+    // ---- API Keys (one per provider, shown/hidden) ----
+    '<div class="card">',
+    '<label id="keyLabel">API Key</label>',
+    '<input type="password" id="claudeApiKey"  placeholder="sk-ant-api03-..."  value="' + esc(claudeApiKey)  + '" style="display:' + (provider === 'claude'  ? 'block' : 'none') + '">',
+    '<input type="password" id="geminiApiKey"  placeholder="AIza..."           value="' + esc(geminiApiKey)  + '" style="display:' + (provider === 'gemini'  ? 'block' : 'none') + '">',
+    '<input type="password" id="chatgptApiKey" placeholder="sk-..."            value="' + esc(chatgptApiKey) + '" style="display:' + (provider === 'chatgpt' ? 'block' : 'none') + '">',
+    '<p class="hint" id="keyHint"></p>',
+    '</div>',
+
+    // ---- Model ----
     '<div class="card">',
     '<label>Model</label>',
-    '<select id="model">',
-    opt('claude-haiku-4-5-20251001', 'Haiku 4.5 \u2014 Fast'),
-    opt('claude-sonnet-4-6',         'Sonnet 4.6 \u2014 Smart'),
-    opt('claude-opus-4-6',           'Opus 4.6 \u2014 Best'),
-    '</select>',
+    '<select id="model"></select>',
 
     '<div class="field">',
     '<div class="range-row"><label>Max Response Tokens</label><span class="range-val" id="tokVal">' + maxTokens + '</span></div>',
@@ -75,17 +88,66 @@ function getConfigPageUrl(settings) {
     '<button onclick="save()">Save Settings</button>',
 
     '<script>',
+    // Model lists per provider
+    'var MODELS={',
+    '  claude: [',
+    '    {v:"claude-haiku-4-5-20251001", l:"Haiku 4.5 \u2014 Fast"},',
+    '    {v:"claude-sonnet-4-6",         l:"Sonnet 4.6 \u2014 Smart"},',
+    '    {v:"claude-opus-4-6",           l:"Opus 4.6 \u2014 Best"}',
+    '  ],',
+    '  gemini: [',
+    '    {v:"gemini-2.0-flash",   l:"Gemini 2.0 Flash \u2014 Fast"},',
+    '    {v:"gemini-1.5-flash",   l:"Gemini 1.5 Flash \u2014 Fast"},',
+    '    {v:"gemini-1.5-pro",     l:"Gemini 1.5 Pro \u2014 Best"}',
+    '  ],',
+    '  chatgpt: [',
+    '    {v:"gpt-4o-mini", l:"GPT-4o Mini \u2014 Fast"},',
+    '    {v:"gpt-4o",      l:"GPT-4o \u2014 Smart"},',
+    '    {v:"gpt-4-turbo", l:"GPT-4 Turbo \u2014 Best"}',
+    '  ]',
+    '};',
+    'var KEY_HINTS={',
+    '  claude:  "Found at console.anthropic.com",',
+    '  gemini:  "Found at aistudio.google.com/apikey",',
+    '  chatgpt: "Found at platform.openai.com/api-keys"',
+    '};',
+    'var currentModel="' + esc(model) + '";',
+    'function setProvider(p){',
+    '  document.getElementById("provider").value=p;',
+    '  ["claude","gemini","chatgpt"].forEach(function(id){',
+    '    document.getElementById("btn-"+id).className="provider-btn"+(p===id?" active":"");',
+    '    document.getElementById(id+"ApiKey").style.display=p===id?"block":"none";',
+    '  });',
+    '  document.getElementById("keyHint").textContent=KEY_HINTS[p]||"";',
+    '  populateModels(p);',
+    '}',
+    'function populateModels(p){',
+    '  var sel=document.getElementById("model");',
+    '  sel.innerHTML="";',
+    '  (MODELS[p]||[]).forEach(function(m){',
+    '    var o=document.createElement("option");',
+    '    o.value=m.v; o.textContent=m.l;',
+    '    if(m.v===currentModel)o.selected=true;',
+    '    sel.appendChild(o);',
+    '  });',
+    '}',
     'function updateTok(v){document.getElementById("tokVal").textContent=v;}',
     'function updateHist(v){document.getElementById("histVal").textContent=v+(v==1?" turn":" turns");}',
     'function save(){',
+    '  var p=document.getElementById("provider").value;',
     '  var cfg={',
-    '    apiKey:document.getElementById("apiKey").value,',
-    '    model:document.getElementById("model").value,',
-    '    maxTokens:parseInt(document.getElementById("maxTokens").value),',
-    '    maxHistory:parseInt(document.getElementById("maxHistory").value)',
+    '    provider:      p,',
+    '    claudeApiKey:  document.getElementById("claudeApiKey").value,',
+    '    geminiApiKey:  document.getElementById("geminiApiKey").value,',
+    '    chatgptApiKey: document.getElementById("chatgptApiKey").value,',
+    '    model:         document.getElementById("model").value,',
+    '    maxTokens:     parseInt(document.getElementById("maxTokens").value),',
+    '    maxHistory:    parseInt(document.getElementById("maxHistory").value)',
     '  };',
     '  location.href="pebblejs://close#"+encodeURIComponent(JSON.stringify(cfg));',
     '}',
+    // Init on load
+    'setProvider("' + esc(provider) + '");',
     '<\/script>',
     '</body></html>'
   ].join('');

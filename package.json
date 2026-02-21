@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "private": true,
+  "scripts": {
+    "gen-env": "node scripts/gen-env.js"
+  },
   "dependencies": {},
   "pebble": {
     "displayName": "hb-claudeAI",
