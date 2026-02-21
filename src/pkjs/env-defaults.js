@@ -5,7 +5,7 @@
 
 module.exports = {
   PROVIDER: '',
-  CLAUDE_API_KEY: '',
+  CLAUDE_API_KEY: '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',
   GEMINI_API_KEY: '',
   CHATGPT_API_KEY: '',
   MODEL: '',
