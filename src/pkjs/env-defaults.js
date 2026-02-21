@@ -5,7 +5,7 @@
 
 module.exports = {
   PROVIDER: '',
-  CLAUDE_API_KEY: '',
+  CLAUDE_API_KEY: 'REDACTED_API_KEY',
   GEMINI_API_KEY: '',
   CHATGPT_API_KEY: '',
   MODEL: '',

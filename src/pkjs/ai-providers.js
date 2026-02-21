@@ -29,7 +29,19 @@ function askClaude(query, history, settings, onSuccess, onError) {
   xhr.setRequestHeader('x-api-key',         settings.apiKey);
   xhr.setRequestHeader('anthropic-version', '2023-06-01');
 
-  xhr.onload = function() {
+  // Manual timeout — xhr.timeout is not reliable in PebbleKit JS.
+  var finished = false;
+  var timer = setTimeout(function() {
+    if (finished) return;
+    finished = true;
+    xhr.abort();
+    onError('Timed out. Try again.');
+  }, 30000);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4 || finished) return;
+    finished = true;
+    clearTimeout(timer);
     if (xhr.status === 200) {
       try {
         onSuccess(JSON.parse(xhr.responseText).content[0].text);
@@ -40,7 +52,12 @@ function askClaude(query, history, settings, onSuccess, onError) {
       onError('API error ' + xhr.status + '. Check key/network.');
     }
   };
-  xhr.onerror = function() { onError('Network error. Check phone connection.'); };
+  xhr.onerror = function() {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    onError('Network error. Check connection.');
+  };
   xhr.send(body);
 }
 

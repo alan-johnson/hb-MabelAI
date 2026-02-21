@@ -22,7 +22,7 @@ static void dictation_session_callback(DictationSession *session,
                                         char *transcription,
                                         void *context) {
   if (status == DictationSessionStatusSuccess) {
-    set_status("Mabel is fetching...");
+    set_status("Thinking...");
     s_is_loading = true;
     DictionaryIterator *out_iter;
     AppMessageResult result = app_message_outbox_begin(&out_iter);
@@ -84,7 +84,8 @@ static void main_window_load(Window *window) {
   s_splash_layer  = bitmap_layer_create(GRect(0, 0, content_w, half_h));
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
-  bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpAssign);
+  //bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpAssign);
+  bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
   bitmap_layer_set_background_color(s_splash_layer, GColorDarkGray);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
 
