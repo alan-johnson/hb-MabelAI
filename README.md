@@ -11,11 +11,24 @@ A Pebble watchapp that lets you speak questions to an AI and read the responses 
 - Works on all Pebble platforms (basalt, chalk, diorite, emery, flint)
 
 ## Controls
+
+**Main screen**
 | Button | Action |
 |--------|--------|
 | SELECT (middle) | Start voice dictation |
+| UP | Open help page |
+
+**Response screen**
+| Button | Action |
+|--------|--------|
 | UP | Scroll response up |
 | DOWN | Scroll response down |
+| BACK | Return to main screen |
+
+**Help screen**
+| Button | Action |
+|--------|--------|
+| UP / DOWN | Scroll help text |
 | BACK | Return to main screen |
 
 ## Setup
@@ -87,4 +100,4 @@ pebble install --phone <YOUR_PHONE_IP>
 ## Notes
 - Responses are truncated to ~1800 chars to fit watch memory.
 - Requires Bluetooth + phone internet connection.
-- Icon images (`icon_mic.png`, `icon_up.png`, `icon_down.png`) are 16×16 px, 1-bit grayscale.
+- Icon images (`icon_mic.png`, `icon_up.png`, `icon_down.png`, `icon_help.png`) are 16×16 px, 1-bit grayscale.
