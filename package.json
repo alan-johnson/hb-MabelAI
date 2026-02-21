@@ -1,5 +1,5 @@
 {
-  "name": "hb-claude-ai",
+  "name": "hb-mabel-ai",
   "author": "handsbreadth LLC",
   "version": "1.0.0",
   "keywords": ["pebble-app"],
@@ -9,7 +9,7 @@
   },
   "dependencies": {},
   "pebble": {
-    "displayName": "hb-claudeAI",
+    "displayName": "hb-MabelAI",
     "uuid": "a1253abf-48bd-4bb1-a9d6-b866b60595e1",
     "sdkVersion": "3",
     "enableMultiJS": true,
@@ -34,7 +34,7 @@
       "media": [
       {
         "type": "bitmap",
-        "name": "CAPT_CLAUDE",
+        "name": "MABEL_DOG",
         "file": "images/mabel_80x80.png"
       },
       {
@@ -51,6 +51,11 @@
         "type": "bitmap",
         "name": "ICON_DOWN",
         "file": "images/icon_down.png"
+      },
+      {
+        "type": "bitmap",
+        "name": "ICON_HELP",
+        "file": "images/icon_help.png"
       }
     ]
     }

@@ -1,4 +1,4 @@
-#include "hb-claudeAI.h"
+#include "hb-mabelAI.h"
 
 // ---- Shared state definitions ----
 char    s_response_buffer[2048];
@@ -6,8 +6,10 @@ bool    s_is_loading = false;
 GBitmap *s_icon_mic;
 GBitmap *s_icon_up;
 GBitmap *s_icon_down;
+GBitmap *s_icon_help;
 Window  *s_main_window;
 Window  *s_result_window;
+Window  *s_help_window;
 
 // ---- AppMessage Callbacks ----
 
@@ -19,7 +21,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
   if (response_t) {
     show_response(response_t->value->cstring);
-    set_status("Press MIC to ask Mabel");
+    set_status(STR_STATUS_IDLE);
     // Push result window; if already on top, response is updated in place
     if (window_stack_get_top_window() != s_result_window) {
       window_stack_push(s_result_window, true);
@@ -32,13 +34,13 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
   s_is_loading = false;
-  set_status("Message dropped. Try again.");
+  set_status(STR_ERR_MSG_DROPPED);
 }
 
 static void outbox_failed_callback(DictionaryIterator *iterator,
                                     AppMessageResult reason, void *context) {
   s_is_loading = false;
-  set_status("Send failed. Try again.");
+  set_status(STR_ERR_OUTBOX_FAILED);
 }
 
 // ---- Init / Deinit ----
@@ -50,6 +52,7 @@ static void init(void) {
   s_icon_mic  = gbitmap_create_with_resource(RESOURCE_ID_ICON_MIC);
   s_icon_up   = gbitmap_create_with_resource(RESOURCE_ID_ICON_UP);
   s_icon_down = gbitmap_create_with_resource(RESOURCE_ID_ICON_DOWN);
+  s_icon_help = gbitmap_create_with_resource(RESOURCE_ID_ICON_HELP);
 
   app_message_register_inbox_received(inbox_received_callback);
   app_message_register_inbox_dropped(inbox_dropped_callback);
@@ -62,15 +65,20 @@ static void init(void) {
   s_result_window = window_create();
   window_set_window_handlers(s_result_window, result_window_get_handlers());
 
+  s_help_window = window_create();
+  window_set_window_handlers(s_help_window, help_window_get_handlers());
+
   window_stack_push(s_main_window, true);
 }
 
 static void deinit(void) {
   window_destroy(s_main_window);
   window_destroy(s_result_window);
+  window_destroy(s_help_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);
+  gbitmap_destroy(s_icon_help);
 }
 
 int main(void) {

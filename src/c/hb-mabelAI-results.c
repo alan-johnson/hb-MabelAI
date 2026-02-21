@@ -1,4 +1,4 @@
-#include "hb-claudeAI.h"
+#include "hb-mabelAI.h"
 
 // ---- Private layer state ----
 static ScrollLayer    *s_scroll_layer;
