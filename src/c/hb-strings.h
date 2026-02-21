@@ -18,11 +18,12 @@
 // ---- Help window ----
 #define STR_HELP_TEXT \
   "How to use Mabel:\n\n" \
-  "1. Press the MIC button (middle) to start listening.\n\n" \
+  "1. Press and release the MIC button (middle) to start listening.\n\n" \
   "2. Speak your question clearly.\n\n" \
-  "3. Wait for Mabel to reply. This may take a few seconds.\n\n" \
-  "4. Use the UP/DOWN buttons to scroll through long answers.\n\n" \
-  "5. Press BACK to return to the main screen.\n\n" \
+  "3. Press the MIC button again to stop listening and send your question.\n\n" \
+  "4. Wait for Mabel to reply. This may take a few seconds.\n\n" \
+  "5. Use the UP/DOWN buttons to scroll through long answers.\n\n" \
+  "6. Press BACK to return to the main screen.\n\n" \
   "Tips:\n" \
   "- Keep questions short and clear.\n" \
   "- Make sure your phone is connected and the Pebble app is open.\n" \
