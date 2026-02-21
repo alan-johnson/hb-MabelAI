@@ -1,0 +1,12 @@
+# Pebble SDK build output
+build/
+
+# Pebble lock files
+.lock-waf_darwin_build
+.lock-waf_linux_build
+
+# Node
+node_modules/
+
+# macOS
+.DS_Store

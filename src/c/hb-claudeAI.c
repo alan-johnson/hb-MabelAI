@@ -19,7 +19,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
   if (response_t) {
     show_response(response_t->value->cstring);
-    set_status("Press MIC to ask Claude");
+    set_status("Press MIC to ask Mabel");
     // Push result window; if already on top, response is updated in place
     if (window_stack_get_top_window() != s_result_window) {
       window_stack_push(s_result_window, true);
