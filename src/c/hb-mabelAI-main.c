@@ -5,6 +5,7 @@
 #define EMULATOR
 
 // ---- Private layer state ----
+static StatusBarLayer *s_status_bar;
 static BitmapLayer    *s_splash_layer;
 static GBitmap        *s_splash_bitmap;
 static TextLayer      *s_prompt_layer;
@@ -134,6 +135,10 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
+  // Status bar — clock at the top
+  s_status_bar = status_bar_layer_create();
+  layer_add_child(window_layer, status_bar_layer_get_layer(s_status_bar));
+
   // Action bar — mic icon on SELECT only
   s_main_action_bar = action_bar_layer_create();
   action_bar_layer_add_to_window(s_main_action_bar, window);
@@ -142,11 +147,12 @@ static void main_window_load(Window *window) {
   action_bar_layer_set_icon(s_main_action_bar, BUTTON_ID_UP,     s_icon_help);
 
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
-  int half_h    = bounds.size.h / 2;
+  int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
+  int half_h    = content_h / 2;
 
-  // Top half: splash image
+  // Top half: splash image (below status bar)
   s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG);
-  s_splash_layer  = bitmap_layer_create(GRect(0, 0, content_w, half_h));
+  s_splash_layer  = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
   //bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpAssign);
@@ -155,7 +161,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
 
   // Bottom half: user prompt / status text
-  s_prompt_layer = text_layer_create(GRect(4, half_h + 4, content_w - 8, half_h - 8));
+  s_prompt_layer = text_layer_create(GRect(4, STATUS_BAR_LAYER_HEIGHT + half_h + 4, content_w - 8, half_h - 8));
   text_layer_set_font(s_prompt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_color(s_prompt_layer, GColorBlack);
   text_layer_set_background_color(s_prompt_layer, GColorClear);
@@ -166,6 +172,7 @@ static void main_window_load(Window *window) {
 }
 
 static void main_window_unload(Window *window) {
+  status_bar_layer_destroy(s_status_bar);
   bitmap_layer_destroy(s_splash_layer);
   gbitmap_destroy(s_splash_bitmap);
   text_layer_destroy(s_prompt_layer);

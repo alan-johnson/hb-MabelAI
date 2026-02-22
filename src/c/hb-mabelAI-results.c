@@ -1,6 +1,7 @@
 #include "hb-mabelAI.h"
 
 // ---- Private layer state ----
+static StatusBarLayer *s_status_bar;
 static ScrollLayer    *s_scroll_layer;
 static TextLayer      *s_response_layer;
 static ActionBarLayer *s_result_action_bar;
@@ -47,6 +48,10 @@ static void result_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
+  // Status bar — clock at the top
+  s_status_bar = status_bar_layer_create();
+  layer_add_child(window_layer, status_bar_layer_get_layer(s_status_bar));
+
   // Action bar — up/down scroll; BACK button pops automatically
   s_result_action_bar = action_bar_layer_create();
   action_bar_layer_add_to_window(s_result_action_bar, window);
@@ -56,8 +61,8 @@ static void result_window_load(Window *window) {
 
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
 
-  // Scroll layer
-  s_scroll_layer = scroll_layer_create(GRect(2, 2, content_w - 4, bounds.size.h - 4));
+  // Scroll layer (below status bar)
+  s_scroll_layer = scroll_layer_create(GRect(2, STATUS_BAR_LAYER_HEIGHT + 2, content_w - 4, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 4));
   layer_add_child(window_layer, scroll_layer_get_layer(s_scroll_layer));
 
   // Response text inside scroll layer
@@ -73,6 +78,7 @@ static void result_window_load(Window *window) {
 }
 
 static void result_window_unload(Window *window) {
+  status_bar_layer_destroy(s_status_bar);
   text_layer_destroy(s_response_layer);
   s_response_layer = NULL;
   scroll_layer_destroy(s_scroll_layer);
