@@ -142,6 +142,8 @@ Pebble.addEventListener('ready', function() {
     gemini:  settings.geminiApiKey,
     chatgpt: settings.chatgptApiKey
   };
+  // Test query to verify API key is working, and show appropriate status on the watch.
+  //askAI('What is 2+2?');
   if (!apiKeyMap[settings.provider]) {
     sendToWatch(KEY_STATUS, 'No API key. Open settings.');
   }
