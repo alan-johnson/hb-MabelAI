@@ -1,7 +1,7 @@
 // Configuration page builder for hb-claudeAI
 // Returns a self-contained data URI that opens in the Pebble app's webview.
 
-function getConfigPageUrl(settings) {
+function getConfigPageUrl(settings, usage) {
   var provider      = settings.provider      || 'claude';
   var claudeApiKey  = settings.claudeApiKey  || '';
   var geminiApiKey  = settings.geminiApiKey  || '';
@@ -9,6 +9,20 @@ function getConfigPageUrl(settings) {
   var model         = settings.model         || 'claude-haiku-4-5-20251001';
   var maxTokens     = settings.maxTokens     || 300;
   var maxHistory    = settings.maxHistory    != null ? settings.maxHistory : 4;
+  usage = usage || {};
+
+  function fmt(n) {
+    return (n || 0).toLocaleString();
+  }
+
+  function usageRow(label, key) {
+    var u = usage[key] || { requests: 0, tokensIn: 0, tokensOut: 0 };
+    var detail = u.requests === 0
+      ? 'No requests yet'
+      : fmt(u.requests) + ' req \u2022 ' + fmt(u.tokensIn) + ' in / ' + fmt(u.tokensOut) + ' out';
+    return '<div class="usage-row"><span class="usage-name">' + label +
+           '</span><span class="usage-stats">' + detail + '</span></div>';
+  }
 
   function esc(str) {
     return String(str)
@@ -43,6 +57,12 @@ function getConfigPageUrl(settings) {
     'button{display:block;width:100%;padding:14px;background:#f90;color:#000;font-size:17px;font-weight:700;border:none;border-radius:10px;cursor:pointer;margin-top:20px}',
     'button:active{background:#d70}',
     '.hint{font-size:11px;color:#555;margin-top:5px}',
+    '.usage-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #2a2a2a}',
+    '.usage-row:last-of-type{border-bottom:none}',
+    '.usage-name{font-size:13px;font-weight:600;color:#ccc}',
+    '.usage-stats{font-size:11px;color:#666;text-align:right}',
+    '.reset-btn{display:block;width:100%;padding:9px;background:#2a2a2a;color:#888;font-size:13px;font-weight:600;border:1px solid #3a3a3a;border-radius:6px;cursor:pointer;margin-top:12px;text-align:center}',
+    '.reset-btn:active{background:#3a2a2a;color:#f90}',
     '</style></head><body>',
 
     '<h1>AI Settings</h1>',
@@ -86,6 +106,14 @@ function getConfigPageUrl(settings) {
     '</div>',
 
     '<button onclick="save()">Save Settings</button>',
+
+    '<div class="card">',
+    '<label>Usage Statistics</label>',
+    usageRow('Claude',  'claude'),
+    usageRow('Gemini',  'gemini'),
+    usageRow('ChatGPT', 'chatgpt'),
+    '<div class="reset-btn" onclick="resetStats()">Reset Stats</div>',
+    '</div>',
 
     '<script>',
     // Model lists per provider
@@ -133,9 +161,9 @@ function getConfigPageUrl(settings) {
     '}',
     'function updateTok(v){document.getElementById("tokVal").textContent=v;}',
     'function updateHist(v){document.getElementById("histVal").textContent=v+(v==1?" turn":" turns");}',
-    'function save(){',
+    'function collectCfg(){',
     '  var p=document.getElementById("provider").value;',
-    '  var cfg={',
+    '  return{',
     '    provider:      p,',
     '    claudeApiKey:  document.getElementById("claudeApiKey").value,',
     '    geminiApiKey:  document.getElementById("geminiApiKey").value,',
@@ -144,6 +172,13 @@ function getConfigPageUrl(settings) {
     '    maxTokens:     parseInt(document.getElementById("maxTokens").value),',
     '    maxHistory:    parseInt(document.getElementById("maxHistory").value)',
     '  };',
+    '}',
+    'function save(){',
+    '  location.href="pebblejs://close#"+encodeURIComponent(JSON.stringify(collectCfg()));',
+    '}',
+    'function resetStats(){',
+    '  var cfg=collectCfg();',
+    '  cfg.resetUsage=true;',
     '  location.href="pebblejs://close#"+encodeURIComponent(JSON.stringify(cfg));',
     '}',
     // Init on load

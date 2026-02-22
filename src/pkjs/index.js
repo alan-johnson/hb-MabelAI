@@ -52,6 +52,40 @@ function saveSettings(settings) {
   localStorage.setItem('maxHistory',    settings.maxHistory);
 }
 
+// ---- Usage tracking ----
+
+var USAGE_PROVIDERS = ['claude', 'gemini', 'chatgpt'];
+
+function loadUsage() {
+  var usage = {};
+  USAGE_PROVIDERS.forEach(function(p) {
+    usage[p] = {
+      requests:  parseInt(localStorage.getItem('usage_' + p + '_requests'))   || 0,
+      tokensIn:  parseInt(localStorage.getItem('usage_' + p + '_tokens_in'))  || 0,
+      tokensOut: parseInt(localStorage.getItem('usage_' + p + '_tokens_out')) || 0
+    };
+  });
+  return usage;
+}
+
+function recordUsage(provider, usage) {
+  if (!usage) return;
+  var r  = parseInt(localStorage.getItem('usage_' + provider + '_requests'))   || 0;
+  var ti = parseInt(localStorage.getItem('usage_' + provider + '_tokens_in'))  || 0;
+  var to = parseInt(localStorage.getItem('usage_' + provider + '_tokens_out')) || 0;
+  localStorage.setItem('usage_' + provider + '_requests',   r  + 1);
+  localStorage.setItem('usage_' + provider + '_tokens_in',  ti + (usage.inputTokens  || 0));
+  localStorage.setItem('usage_' + provider + '_tokens_out', to + (usage.outputTokens || 0));
+}
+
+function resetUsageStats() {
+  USAGE_PROVIDERS.forEach(function(p) {
+    localStorage.removeItem('usage_' + p + '_requests');
+    localStorage.removeItem('usage_' + p + '_tokens_in');
+    localStorage.removeItem('usage_' + p + '_tokens_out');
+  });
+}
+
 // ---- Utility ----
 
 function truncateForWatch(text, maxChars) {
@@ -128,8 +162,9 @@ function askAI(userQuery) {
     userQuery,
     conversationHistory,
     providerSettings,
-    function(reply) {
+    function(reply, usage) {
       isLoading = false;
+      recordUsage(provider, usage);
       if (settings.maxHistory > 0) {
         conversationHistory.push({ role: 'assistant', content: reply });
       }
@@ -160,13 +195,14 @@ Pebble.addEventListener('ready', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  Pebble.openURL(configPage.getConfigPageUrl(loadSettings()));
+  Pebble.openURL(configPage.getConfigPageUrl(loadSettings(), loadUsage()));
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
   if (!e.response) return;
   try {
     var settings     = JSON.parse(decodeURIComponent(e.response));
+    if (settings.resetUsage) { resetUsageStats(); }
     saveSettings(settings);
     console.log('Settings saved: ' + JSON.stringify(settings));
     var name = PROVIDER_NAMES[settings.provider] || 'AI';

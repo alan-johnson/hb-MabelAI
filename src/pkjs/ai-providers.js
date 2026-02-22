@@ -44,7 +44,10 @@ function askClaude(query, history, settings, onSuccess, onError) {
     clearTimeout(timer);
     if (xhr.status === 200) {
       try {
-        onSuccess(JSON.parse(xhr.responseText).content[0].text);
+        var data  = JSON.parse(xhr.responseText);
+        var usage = null;
+        try { usage = { inputTokens: data.usage.input_tokens, outputTokens: data.usage.output_tokens }; } catch(e) {}
+        onSuccess(data.content[0].text, usage);
       } catch (e) {
         onError('Response parse error.');
       }
@@ -102,7 +105,10 @@ function askGemini(query, history, settings, onSuccess, onError) {
     clearTimeout(timer);
     if (xhr.status === 200) {
       try {
-        onSuccess(JSON.parse(xhr.responseText).candidates[0].content.parts[0].text);
+        var data  = JSON.parse(xhr.responseText);
+        var usage = null;
+        try { usage = { inputTokens: data.usageMetadata.promptTokenCount, outputTokens: data.usageMetadata.candidatesTokenCount }; } catch(e) {}
+        onSuccess(data.candidates[0].content.parts[0].text, usage);
       } catch (e) {
         onError('Response parse error.');
       }
@@ -160,7 +166,10 @@ function askChatGPT(query, history, settings, onSuccess, onError) {
     clearTimeout(timer);
     if (xhr.status === 200) {
       try {
-        onSuccess(JSON.parse(xhr.responseText).choices[0].message.content);
+        var data  = JSON.parse(xhr.responseText);
+        var usage = null;
+        try { usage = { inputTokens: data.usage.prompt_tokens, outputTokens: data.usage.completion_tokens }; } catch(e) {}
+        onSuccess(data.choices[0].message.content, usage);
       } catch (e) {
         onError('Response parse error.');
       }
