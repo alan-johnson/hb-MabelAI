@@ -2,7 +2,7 @@
 
 // Uncomment when running in the Pebble emulator (no real microphone).
 // Comment out before deploying to a real watch.
-#define EMULATOR
+//#define EMULATOR
 
 // ---- Private layer state ----
 static BitmapLayer    *s_splash_layer;
