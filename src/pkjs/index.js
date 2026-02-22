@@ -83,8 +83,14 @@ function sendToWatch(key, value) {
 // ---- AI dispatch ----
 
 var conversationHistory = [];
+var isLoading = false;
 
 function askAI(userQuery) {
+  if (isLoading) {
+    console.log('askAI: request already in flight, ignoring duplicate');
+    return;
+  }
+
   var settings  = loadSettings();
   var provider  = settings.provider || 'claude';
   var apiKeyMap = {
@@ -99,6 +105,8 @@ function askAI(userQuery) {
     return;
   }
 
+  isLoading = true;
+  console.log('askAI: provider=' + provider + ' key=' + apiKey.substring(0, 8) + '...');
   sendToWatch(KEY_STATUS, 'Mabel is thinking...');
 
   if (settings.maxHistory > 0) {
@@ -121,12 +129,14 @@ function askAI(userQuery) {
     conversationHistory,
     providerSettings,
     function(reply) {
+      isLoading = false;
       if (settings.maxHistory > 0) {
         conversationHistory.push({ role: 'assistant', content: reply });
       }
       sendToWatch(KEY_RESPONSE, truncateForWatch(reply));
     },
     function(errMsg) {
+      isLoading = false;
       sendToWatch(KEY_STATUS, errMsg);
     }
   );
@@ -142,6 +152,8 @@ Pebble.addEventListener('ready', function() {
     gemini:  settings.geminiApiKey,
     chatgpt: settings.chatgptApiKey
   };
+  // Test query — uncomment only for one-off debugging; leave off to avoid burning API quota.
+  // askAI('What is the capital of France?');
   if (!apiKeyMap[settings.provider]) {
     sendToWatch(KEY_STATUS, 'No API key. Open settings.');
   }

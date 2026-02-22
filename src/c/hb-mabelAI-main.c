@@ -1,16 +1,73 @@
 #include "hb-mabelAI.h"
 
+// Uncomment when running in the Pebble emulator (no real microphone).
+// Comment out before deploying to a real watch.
+#define EMULATOR
+
 // ---- Private layer state ----
 static BitmapLayer    *s_splash_layer;
 static GBitmap        *s_splash_bitmap;
 static TextLayer      *s_prompt_layer;
 static ActionBarLayer *s_main_action_bar;
 
+// ---- Thinking animation ----
+static AppTimer *s_thinking_timer = NULL;
+static uint8_t   s_thinking_dots  = 0;
+static char      s_thinking_buf[sizeof(STR_STATUS_THINKING) + 3];  // base + "..." + NUL
+
+static void thinking_timer_callback(void *context) {
+  s_thinking_timer = NULL;
+  if (!s_is_loading) return;
+
+  s_thinking_dots = (s_thinking_dots % 3) + 1;
+  snprintf(s_thinking_buf, sizeof(s_thinking_buf), STR_STATUS_THINKING "%s",
+           s_thinking_dots == 1 ? "."   :
+           s_thinking_dots == 2 ? ".."  : "...");
+  if (s_prompt_layer) {
+    text_layer_set_text(s_prompt_layer, s_thinking_buf);
+  }
+  s_thinking_timer = app_timer_register(500, thinking_timer_callback, NULL);
+}
+
+static void start_thinking_animation(void) {
+  if (s_thinking_timer) {
+    app_timer_cancel(s_thinking_timer);
+    s_thinking_timer = NULL;
+  }
+  s_thinking_dots = 1;
+  snprintf(s_thinking_buf, sizeof(s_thinking_buf), STR_STATUS_THINKING ".");
+  if (s_prompt_layer) {
+    text_layer_set_text(s_prompt_layer, s_thinking_buf);
+  }
+  s_thinking_timer = app_timer_register(500, thinking_timer_callback, NULL);
+}
+
 // ---- Public: update prompt / status text ----
 
 void set_status(const char *msg) {
+  // Cancel any running thinking animation
+  if (s_thinking_timer) {
+    app_timer_cancel(s_thinking_timer);
+    s_thinking_timer = NULL;
+  }
   if (s_prompt_layer) {
     text_layer_set_text(s_prompt_layer, msg);
+  }
+}
+
+// ---- Query dispatch ----
+
+static void send_query(const char *query) {
+  start_thinking_animation();
+  s_is_loading = true;
+  DictionaryIterator *out_iter;
+  AppMessageResult result = app_message_outbox_begin(&out_iter);
+  if (result == APP_MSG_OK) {
+    dict_write_cstring(out_iter, KEY_QUERY, query);
+    app_message_outbox_send();
+  } else {
+    set_status(STR_ERR_SEND);
+    s_is_loading = false;
   }
 }
 
@@ -22,17 +79,7 @@ static void dictation_session_callback(DictationSession *session,
                                         char *transcription,
                                         void *context) {
   if (status == DictationSessionStatusSuccess) {
-    set_status(STR_STATUS_THINKING);
-    s_is_loading = true;
-    DictionaryIterator *out_iter;
-    AppMessageResult result = app_message_outbox_begin(&out_iter);
-    if (result == APP_MSG_OK) {
-      dict_write_cstring(out_iter, KEY_QUERY, transcription);
-      app_message_outbox_send();
-    } else {
-      set_status(STR_ERR_SEND);
-      s_is_loading = false;
-    }
+    send_query(transcription);
   } else {
     set_status(STR_ERR_DICTATION);
     s_is_loading = false;
@@ -57,7 +104,15 @@ static void start_dictation(void) {
 // ---- Click handlers ----
 
 static void main_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-#ifdef PBL_MICROPHONE
+#if defined(EMULATOR)
+  // Emulator has no real mic — send a fixed test query to exercise the full round-trip
+  if (s_is_loading) return;
+  if (!connection_service_peek_pebble_app_connection()) {
+    set_status(STR_STATUS_NO_PHONE);
+    return;
+  }
+  send_query("What is the capital of France?");
+#elif defined(PBL_MICROPHONE)
   start_dictation();
 #else
   set_status(STR_STATUS_NO_MIC);

@@ -2,6 +2,7 @@
 
 // ---- Shared state definitions ----
 char    s_response_buffer[2048];
+static char s_status_buffer[128];   // persistent copy of inbox status strings
 bool    s_is_loading = false;
 GBitmap *s_icon_mic;
 GBitmap *s_icon_up;
@@ -28,7 +29,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
   }
   if (status_t) {
-    set_status(status_t->value->cstring);
+    snprintf(s_status_buffer, sizeof(s_status_buffer), "%s", status_t->value->cstring);
+    set_status(s_status_buffer);
   }
 }
 

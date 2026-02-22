@@ -5,7 +5,7 @@
 // ---- Main window ----
 #define STR_STATUS_IDLE        "Press MIC to ask Mabel"
 #define STR_STATUS_LISTENING   "Listening..."
-#define STR_STATUS_THINKING    "Thinking..."
+#define STR_STATUS_THINKING    "Thinking"
 #define STR_STATUS_NO_MIC      "No mic on this model."
 #define STR_STATUS_NO_PHONE    "Phone not connected. Open the Pebble app."
 
