@@ -6,9 +6,46 @@ static GBitmap        *s_splash_bitmap;
 static TextLayer      *s_prompt_layer;
 static ActionBarLayer *s_main_action_bar;
 
+// ---- Thinking animation ----
+static AppTimer *s_thinking_timer = NULL;
+static uint8_t   s_thinking_dots  = 0;
+static char      s_thinking_buf[sizeof(STR_STATUS_THINKING) + 3];  // base + "..." + NUL
+
+static void thinking_timer_callback(void *context) {
+  s_thinking_timer = NULL;
+  if (!s_is_loading) return;
+
+  s_thinking_dots = (s_thinking_dots % 3) + 1;
+  snprintf(s_thinking_buf, sizeof(s_thinking_buf), STR_STATUS_THINKING "%s",
+           s_thinking_dots == 1 ? "."   :
+           s_thinking_dots == 2 ? ".."  : "...");
+  if (s_prompt_layer) {
+    text_layer_set_text(s_prompt_layer, s_thinking_buf);
+  }
+  s_thinking_timer = app_timer_register(500, thinking_timer_callback, NULL);
+}
+
+static void start_thinking_animation(void) {
+  if (s_thinking_timer) {
+    app_timer_cancel(s_thinking_timer);
+    s_thinking_timer = NULL;
+  }
+  s_thinking_dots = 1;
+  snprintf(s_thinking_buf, sizeof(s_thinking_buf), STR_STATUS_THINKING ".");
+  if (s_prompt_layer) {
+    text_layer_set_text(s_prompt_layer, s_thinking_buf);
+  }
+  s_thinking_timer = app_timer_register(500, thinking_timer_callback, NULL);
+}
+
 // ---- Public: update prompt / status text ----
 
 void set_status(const char *msg) {
+  // Cancel any running thinking animation
+  if (s_thinking_timer) {
+    app_timer_cancel(s_thinking_timer);
+    s_thinking_timer = NULL;
+  }
   if (s_prompt_layer) {
     text_layer_set_text(s_prompt_layer, msg);
   }
@@ -22,7 +59,7 @@ static void dictation_session_callback(DictationSession *session,
                                         char *transcription,
                                         void *context) {
   if (status == DictationSessionStatusSuccess) {
-    set_status(STR_STATUS_THINKING);
+    start_thinking_animation();
     s_is_loading = true;
     DictionaryIterator *out_iter;
     AppMessageResult result = app_message_outbox_begin(&out_iter);
