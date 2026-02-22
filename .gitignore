@@ -1,5 +1,6 @@
 # Pebble SDK build output
 build/
+PRIVATE-*
 
 # Pebble lock files
 .lock-waf_darwin_build
