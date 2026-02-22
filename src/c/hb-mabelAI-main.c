@@ -160,7 +160,11 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
 
   // Bottom half: user prompt / status text
+#ifdef PBL_ROUND
+  s_prompt_layer = text_layer_create(GRect(14, STATUS_BAR_LAYER_HEIGHT + half_h + 4, content_w - 28, half_h - 8));
+#else
   s_prompt_layer = text_layer_create(GRect(4, STATUS_BAR_LAYER_HEIGHT + half_h + 4, content_w - 8, half_h - 8));
+#endif
   text_layer_set_font(s_prompt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_color(s_prompt_layer, GColorBlack);
   text_layer_set_background_color(s_prompt_layer, GColorClear);

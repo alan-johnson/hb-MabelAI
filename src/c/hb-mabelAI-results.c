@@ -74,13 +74,19 @@ static void result_window_load(Window *window) {
   action_bar_layer_set_icon(s_result_action_bar, BUTTON_ID_DOWN, s_icon_down);
 
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
+#ifdef PBL_ROUND
+  int left_inset = 14;
+#else
+  int left_inset = 2;
+#endif
+  int scroll_w = content_w - left_inset - 2;
 
   // Scroll layer (below status bar)
-  s_scroll_layer = scroll_layer_create(GRect(2, STATUS_BAR_LAYER_HEIGHT + 2, content_w - 4, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 4));
+  s_scroll_layer = scroll_layer_create(GRect(left_inset, STATUS_BAR_LAYER_HEIGHT + 2, scroll_w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 4));
   layer_add_child(window_layer, scroll_layer_get_layer(s_scroll_layer));
 
   // Response text inside scroll layer
-  s_response_layer = text_layer_create(GRect(0, 0, content_w - 4, 2000));
+  s_response_layer = text_layer_create(GRect(0, 0, scroll_w, 2000));
   text_layer_set_font(s_response_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_color(s_response_layer, GColorBlack);
   text_layer_set_background_color(s_response_layer, GColorClear);

@@ -37,7 +37,13 @@ static void help_window_load(Window *window) {
   GRect  bounds       = layer_get_bounds(window_layer);
 
   // Scroll layer — full window width, no action bar (below status bar)
-  s_help_scroll_layer = scroll_layer_create(GRect(4, STATUS_BAR_LAYER_HEIGHT + 4, bounds.size.w - 8, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 8));
+#ifdef PBL_ROUND
+  int h_pad = 14;
+#else
+  int h_pad = 4;
+#endif
+  int content_w = bounds.size.w - h_pad * 2;
+  s_help_scroll_layer = scroll_layer_create(GRect(h_pad, STATUS_BAR_LAYER_HEIGHT + 4, content_w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 8));
 #ifdef PBL_ROUND
   window_set_click_config_provider(window, help_click_config_provider);
 #else
@@ -46,7 +52,6 @@ static void help_window_load(Window *window) {
   layer_add_child(window_layer, scroll_layer_get_layer(s_help_scroll_layer));
 
   // Help text inside scroll layer
-  int content_w = bounds.size.w - 8;
   s_help_text_layer = text_layer_create(GRect(0, 0, content_w, 2000));
   text_layer_set_font(s_help_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_color(s_help_text_layer, GColorBlack);
