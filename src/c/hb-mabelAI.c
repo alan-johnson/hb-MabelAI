@@ -23,7 +23,7 @@ void refresh_custom_status_bars(void) {
   struct tm *t = localtime(&now);
   BatteryChargeState batt = battery_state_service_peek();
   snprintf(s_status_bar_text, sizeof(s_status_bar_text),
-           "%02d:%02d  batt: %d%%", t->tm_hour, t->tm_min, batt.charge_percent);
+           "%02d:%02d  BAT: %d%%", t->tm_hour, t->tm_min, batt.charge_percent);
   if (s_main_status_bar_layer) {
     layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
   }
