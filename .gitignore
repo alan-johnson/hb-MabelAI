@@ -8,5 +8,11 @@ build/
 # Node
 node_modules/
 
+# Generated file — contains baked-in API keys, never commit
+src/pkjs/env-defaults.js
+
+# Local test scripts — contain API keys, never commit
+scripts/test-*.sh
+
 # macOS
 .DS_Store

@@ -4,11 +4,11 @@
 //   HB_MODEL, HB_MAX_TOKENS, HB_MAX_HISTORY
 
 module.exports = {
-  PROVIDER: '',
-  CLAUDE_API_KEY: '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',
+  PROVIDER: 'claude',
+  CLAUDE_API_KEY: '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',
   GEMINI_API_KEY: '',
   CHATGPT_API_KEY: '',
-  MODEL: '',
+  MODEL: 'claude-haiku-4-5-20251001',
   MAX_TOKENS: 0,
   MAX_HISTORY: -1
 };

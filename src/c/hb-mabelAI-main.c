@@ -1,5 +1,9 @@
 #include "hb-mabelAI.h"
 
+// Uncomment when running in the Pebble emulator (no real microphone).
+// Comment out before deploying to a real watch.
+#define EMULATOR
+
 // ---- Private layer state ----
 static BitmapLayer    *s_splash_layer;
 static GBitmap        *s_splash_bitmap;
@@ -51,6 +55,22 @@ void set_status(const char *msg) {
   }
 }
 
+// ---- Query dispatch ----
+
+static void send_query(const char *query) {
+  start_thinking_animation();
+  s_is_loading = true;
+  DictionaryIterator *out_iter;
+  AppMessageResult result = app_message_outbox_begin(&out_iter);
+  if (result == APP_MSG_OK) {
+    dict_write_cstring(out_iter, KEY_QUERY, query);
+    app_message_outbox_send();
+  } else {
+    set_status(STR_ERR_SEND);
+    s_is_loading = false;
+  }
+}
+
 // ---- Voice Dictation ----
 
 #ifdef PBL_MICROPHONE
@@ -59,17 +79,7 @@ static void dictation_session_callback(DictationSession *session,
                                         char *transcription,
                                         void *context) {
   if (status == DictationSessionStatusSuccess) {
-    start_thinking_animation();
-    s_is_loading = true;
-    DictionaryIterator *out_iter;
-    AppMessageResult result = app_message_outbox_begin(&out_iter);
-    if (result == APP_MSG_OK) {
-      dict_write_cstring(out_iter, KEY_QUERY, transcription);
-      app_message_outbox_send();
-    } else {
-      set_status(STR_ERR_SEND);
-      s_is_loading = false;
-    }
+    send_query(transcription);
   } else {
     set_status(STR_ERR_DICTATION);
     s_is_loading = false;
@@ -94,7 +104,15 @@ static void start_dictation(void) {
 // ---- Click handlers ----
 
 static void main_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-#ifdef PBL_MICROPHONE
+#if defined(EMULATOR)
+  // Emulator has no real mic — send a fixed test query to exercise the full round-trip
+  if (s_is_loading) return;
+  if (!connection_service_peek_pebble_app_connection()) {
+    set_status(STR_STATUS_NO_PHONE);
+    return;
+  }
+  send_query("What is the capital of France?");
+#elif defined(PBL_MICROPHONE)
   start_dictation();
 #else
   set_status(STR_STATUS_NO_MIC);

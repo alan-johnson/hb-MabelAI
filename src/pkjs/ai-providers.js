@@ -80,14 +80,26 @@ function askGemini(query, history, settings, onSuccess, onError) {
     generationConfig:   { maxOutputTokens: settings.maxTokens }
   });
 
+  var geminiModel = /^gemini/i.test(settings.model) ? settings.model : 'gemini-2.0-flash';
   var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-    settings.model + ':generateContent?key=' + settings.apiKey;
+    geminiModel + ':generateContent?key=' + settings.apiKey;
 
   var xhr = new XMLHttpRequest();
   xhr.open('POST', url, true);
   xhr.setRequestHeader('Content-Type', 'application/json');
 
-  xhr.onload = function() {
+  var finished = false;
+  var timer = setTimeout(function() {
+    if (finished) return;
+    finished = true;
+    xhr.abort();
+    onError('Timed out. Try again.');
+  }, 30000);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4 || finished) return;
+    finished = true;
+    clearTimeout(timer);
     if (xhr.status === 200) {
       try {
         onSuccess(JSON.parse(xhr.responseText).candidates[0].content.parts[0].text);
@@ -95,10 +107,24 @@ function askGemini(query, history, settings, onSuccess, onError) {
         onError('Response parse error.');
       }
     } else {
-      onError('API error ' + xhr.status + '. Check key/network.');
+      console.log('Gemini error ' + xhr.status + ': ' + xhr.responseText);
+      var errMsg = 'API error ' + xhr.status + '. Check key/network.';
+      try {
+        var detail = JSON.parse(xhr.responseText).error.message;
+        if (detail) {
+          var dot = detail.indexOf('. ');
+          errMsg = dot >= 0 ? detail.substring(0, dot + 1) : detail;
+        }
+      } catch (ex) { /* use default errMsg */ }
+      onError(errMsg);
     }
   };
-  xhr.onerror = function() { onError('Network error. Check phone connection.'); };
+  xhr.onerror = function() {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    onError('Network error. Check phone connection.');
+  };
   xhr.send(body);
 }
 
@@ -120,7 +146,18 @@ function askChatGPT(query, history, settings, onSuccess, onError) {
   xhr.setRequestHeader('Content-Type',  'application/json');
   xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
 
-  xhr.onload = function() {
+  var finished = false;
+  var timer = setTimeout(function() {
+    if (finished) return;
+    finished = true;
+    xhr.abort();
+    onError('Timed out. Try again.');
+  }, 30000);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4 || finished) return;
+    finished = true;
+    clearTimeout(timer);
     if (xhr.status === 200) {
       try {
         onSuccess(JSON.parse(xhr.responseText).choices[0].message.content);
@@ -128,10 +165,16 @@ function askChatGPT(query, history, settings, onSuccess, onError) {
         onError('Response parse error.');
       }
     } else {
+      console.log('ChatGPT error ' + xhr.status + ': ' + xhr.responseText);
       onError('API error ' + xhr.status + '. Check key/network.');
     }
   };
-  xhr.onerror = function() { onError('Network error. Check phone connection.'); };
+  xhr.onerror = function() {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    onError('Network error. Check phone connection.');
+  };
   xhr.send(body);
 }
 
