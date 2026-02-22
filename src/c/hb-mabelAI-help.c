@@ -4,6 +4,32 @@
 static ScrollLayer    *s_help_scroll_layer;
 static TextLayer      *s_help_text_layer;
 
+// ---- Chalk click handlers (replace scroll_layer_set_click_config_onto_window) ----
+// scroll_layer_set_click_config_onto_window takes over the window click config,
+// making it impossible to also subscribe to BACK. On Chalk we need a custom
+// provider so we can pop without animation and avoid "Animation does not exist".
+
+#ifdef PBL_ROUND
+static void help_scroll_up(ClickRecognizerRef recognizer, void *context) {
+  GPoint offset = scroll_layer_get_content_offset(s_help_scroll_layer);
+  scroll_layer_set_content_offset(s_help_scroll_layer,
+                                  GPoint(0, offset.y + 30), false);
+}
+static void help_scroll_down(ClickRecognizerRef recognizer, void *context) {
+  GPoint offset = scroll_layer_get_content_offset(s_help_scroll_layer);
+  scroll_layer_set_content_offset(s_help_scroll_layer,
+                                  GPoint(0, offset.y - 30), false);
+}
+static void help_back_click(ClickRecognizerRef recognizer, void *context) {
+  window_stack_pop(false);
+}
+static void help_click_config_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP,   help_scroll_up);
+  window_single_click_subscribe(BUTTON_ID_DOWN, help_scroll_down);
+  window_single_click_subscribe(BUTTON_ID_BACK, help_back_click);
+}
+#endif
+
 // ---- Window lifecycle ----
 
 static void help_window_load(Window *window) {
@@ -12,7 +38,11 @@ static void help_window_load(Window *window) {
 
   // Scroll layer — full window width, no action bar (below status bar)
   s_help_scroll_layer = scroll_layer_create(GRect(4, STATUS_BAR_LAYER_HEIGHT + 4, bounds.size.w - 8, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 8));
+#ifdef PBL_ROUND
+  window_set_click_config_provider(window, help_click_config_provider);
+#else
   scroll_layer_set_click_config_onto_window(s_help_scroll_layer, window);
+#endif
   layer_add_child(window_layer, scroll_layer_get_layer(s_help_scroll_layer));
 
   // Help text inside scroll layer

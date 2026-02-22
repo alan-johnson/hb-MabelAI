@@ -28,17 +28,36 @@ void show_response(const char *text) {
 
 static void result_up_click_handler(ClickRecognizerRef recognizer, void *context) {
   GPoint offset = scroll_layer_get_content_offset(s_scroll_layer);
+  // animated=true produces "Animation does not exist" errors on Chalk (round)
+#ifdef PBL_ROUND
+  scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y + 30), false);
+#else
   scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y + 30), true);
+#endif
 }
 
 static void result_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   GPoint offset = scroll_layer_get_content_offset(s_scroll_layer);
+#ifdef PBL_ROUND
+  scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y - 30), false);
+#else
   scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y - 30), true);
+#endif
 }
+
+#ifdef PBL_ROUND
+static void result_back_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // Pop without animation on Chalk to avoid "Animation does not exist" errors
+  window_stack_pop(false);
+}
+#endif
 
 static void result_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP,   result_up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, result_down_click_handler);
+#ifdef PBL_ROUND
+  window_single_click_subscribe(BUTTON_ID_BACK, result_back_click_handler);
+#endif
 }
 
 // ---- Window lifecycle ----

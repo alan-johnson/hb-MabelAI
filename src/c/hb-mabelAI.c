@@ -56,7 +56,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     set_status(STR_STATUS_IDLE);
     // Push result window; if already on top, response is updated in place
     if (window_stack_get_top_window() != s_result_window) {
+#ifdef PBL_ROUND
+      window_stack_push(s_result_window, false);
+#else
       window_stack_push(s_result_window, true);
+#endif
     }
   }
   if (status_t) {
@@ -106,7 +110,13 @@ static void init(void) {
   s_help_window = window_create();
   window_set_window_handlers(s_help_window, help_window_get_handlers());
 
+  // Chalk (round) animation engine does not support the slide-in animation;
+  // using animated=true on PBL_ROUND produces "Animation does not exist" errors.
+#ifdef PBL_ROUND
+  window_stack_push(s_main_window, false);
+#else
   window_stack_push(s_main_window, true);
+#endif
 }
 
 static void deinit(void) {

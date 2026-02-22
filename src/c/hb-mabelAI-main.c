@@ -120,7 +120,11 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
 }
 
 static void main_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+#ifdef PBL_ROUND
+  window_stack_push(s_help_window, false);
+#else
   window_stack_push(s_help_window, true);
+#endif
 }
 
 static void main_click_config_provider(void *context) {
