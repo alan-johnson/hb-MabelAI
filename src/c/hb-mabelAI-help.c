@@ -1,7 +1,6 @@
 #include "hb-mabelAI.h"
 
 // ---- Private layer state ----
-static StatusBarLayer *s_status_bar;
 static ScrollLayer    *s_help_scroll_layer;
 static TextLayer      *s_help_text_layer;
 
@@ -10,10 +9,6 @@ static TextLayer      *s_help_text_layer;
 static void help_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
-
-  // Status bar — clock at the top
-  s_status_bar = status_bar_layer_create();
-  layer_add_child(window_layer, status_bar_layer_get_layer(s_status_bar));
 
   // Scroll layer — full window width, no action bar (below status bar)
   s_help_scroll_layer = scroll_layer_create(GRect(4, STATUS_BAR_LAYER_HEIGHT + 4, bounds.size.w - 8, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 8));
@@ -35,10 +30,21 @@ static void help_window_load(Window *window) {
   scroll_layer_set_content_size(s_help_scroll_layer, GSize(content_w, text_size.h + 20));
 
   scroll_layer_add_child(s_help_scroll_layer, text_layer_get_layer(s_help_text_layer));
+
+  // Custom status bar — added last so it renders on top
+  s_help_status_bar_layer = text_layer_create(GRect(0, 0, bounds.size.w, STATUS_BAR_LAYER_HEIGHT));
+  text_layer_set_background_color(s_help_status_bar_layer, GColorBlack);
+  text_layer_set_text_color(s_help_status_bar_layer, GColorWhite);
+  text_layer_set_font(s_help_status_bar_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_text_alignment(s_help_status_bar_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(s_help_status_bar_layer, GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text(s_help_status_bar_layer, s_status_bar_text);
+  layer_add_child(window_layer, text_layer_get_layer(s_help_status_bar_layer));
 }
 
 static void help_window_unload(Window *window) {
-  status_bar_layer_destroy(s_status_bar);
+  text_layer_destroy(s_help_status_bar_layer);
+  s_help_status_bar_layer = NULL;
   text_layer_destroy(s_help_text_layer);
   s_help_text_layer = NULL;
   scroll_layer_destroy(s_help_scroll_layer);

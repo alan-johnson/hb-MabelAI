@@ -5,7 +5,6 @@
 #define EMULATOR
 
 // ---- Private layer state ----
-static StatusBarLayer *s_status_bar;
 static BitmapLayer    *s_splash_layer;
 static GBitmap        *s_splash_bitmap;
 static TextLayer      *s_prompt_layer;
@@ -135,10 +134,6 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
-  // Status bar — clock at the top
-  s_status_bar = status_bar_layer_create();
-  layer_add_child(window_layer, status_bar_layer_get_layer(s_status_bar));
-
   // Action bar — mic icon on SELECT only
   s_main_action_bar = action_bar_layer_create();
   action_bar_layer_add_to_window(s_main_action_bar, window);
@@ -169,10 +164,21 @@ static void main_window_load(Window *window) {
   text_layer_set_overflow_mode(s_prompt_layer, GTextOverflowModeWordWrap);
   set_status(STR_STATUS_IDLE);
   layer_add_child(window_layer, text_layer_get_layer(s_prompt_layer));
+
+  // Custom status bar — added last so it renders on top of the action bar
+  s_main_status_bar_layer = text_layer_create(GRect(0, 0, bounds.size.w, STATUS_BAR_LAYER_HEIGHT));
+  text_layer_set_background_color(s_main_status_bar_layer, GColorBlack);
+  text_layer_set_text_color(s_main_status_bar_layer, GColorWhite);
+  text_layer_set_font(s_main_status_bar_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_text_alignment(s_main_status_bar_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(s_main_status_bar_layer, GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text(s_main_status_bar_layer, s_status_bar_text);
+  layer_add_child(window_layer, text_layer_get_layer(s_main_status_bar_layer));
 }
 
 static void main_window_unload(Window *window) {
-  status_bar_layer_destroy(s_status_bar);
+  text_layer_destroy(s_main_status_bar_layer);
+  s_main_status_bar_layer = NULL;
   bitmap_layer_destroy(s_splash_layer);
   gbitmap_destroy(s_splash_bitmap);
   text_layer_destroy(s_prompt_layer);

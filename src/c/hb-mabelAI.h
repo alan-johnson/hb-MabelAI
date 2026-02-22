@@ -33,3 +33,13 @@ WindowHandlers result_window_get_handlers(void);
 // ---- API provided by hb-claudeAI-help.c ----
 // Returns the WindowHandlers struct for the help window.
 WindowHandlers help_window_get_handlers(void);
+
+// ---- Shared custom status bar ----
+// Shared text buffer — all windows' status TextLayers point to this.
+extern char      s_status_bar_text[32];
+// Each window's status TextLayer — set in _load, cleared in _unload.
+extern TextLayer *s_main_status_bar_layer;
+extern TextLayer *s_result_status_bar_layer;
+extern TextLayer *s_help_status_bar_layer;
+// Formats time + battery into s_status_bar_text and redraws all live layers.
+void refresh_custom_status_bars(void);

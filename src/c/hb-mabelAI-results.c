@@ -1,7 +1,6 @@
 #include "hb-mabelAI.h"
 
 // ---- Private layer state ----
-static StatusBarLayer *s_status_bar;
 static ScrollLayer    *s_scroll_layer;
 static TextLayer      *s_response_layer;
 static ActionBarLayer *s_result_action_bar;
@@ -48,10 +47,6 @@ static void result_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
-  // Status bar — clock at the top
-  s_status_bar = status_bar_layer_create();
-  layer_add_child(window_layer, status_bar_layer_get_layer(s_status_bar));
-
   // Action bar — up/down scroll; BACK button pops automatically
   s_result_action_bar = action_bar_layer_create();
   action_bar_layer_add_to_window(s_result_action_bar, window);
@@ -75,10 +70,21 @@ static void result_window_load(Window *window) {
 
   // Populate layers from the shared buffer (already filled before this window was pushed)
   refresh_result_layers();
+
+  // Custom status bar — added last so it renders on top of the action bar
+  s_result_status_bar_layer = text_layer_create(GRect(0, 0, bounds.size.w, STATUS_BAR_LAYER_HEIGHT));
+  text_layer_set_background_color(s_result_status_bar_layer, GColorBlack);
+  text_layer_set_text_color(s_result_status_bar_layer, GColorWhite);
+  text_layer_set_font(s_result_status_bar_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_text_alignment(s_result_status_bar_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(s_result_status_bar_layer, GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text(s_result_status_bar_layer, s_status_bar_text);
+  layer_add_child(window_layer, text_layer_get_layer(s_result_status_bar_layer));
 }
 
 static void result_window_unload(Window *window) {
-  status_bar_layer_destroy(s_status_bar);
+  text_layer_destroy(s_result_status_bar_layer);
+  s_result_status_bar_layer = NULL;
   text_layer_destroy(s_response_layer);
   s_response_layer = NULL;
   scroll_layer_destroy(s_scroll_layer);

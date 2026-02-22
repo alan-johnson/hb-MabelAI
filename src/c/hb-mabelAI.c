@@ -12,6 +12,37 @@ Window  *s_main_window;
 Window  *s_result_window;
 Window  *s_help_window;
 
+// ---- Custom status bar shared state ----
+char      s_status_bar_text[32]       = "";
+TextLayer *s_main_status_bar_layer   = NULL;
+TextLayer *s_result_status_bar_layer = NULL;
+TextLayer *s_help_status_bar_layer   = NULL;
+
+void refresh_custom_status_bars(void) {
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
+  BatteryChargeState batt = battery_state_service_peek();
+  snprintf(s_status_bar_text, sizeof(s_status_bar_text),
+           "%02d:%02d  batt: %d%%", t->tm_hour, t->tm_min, batt.charge_percent);
+  if (s_main_status_bar_layer) {
+    layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
+  }
+  if (s_result_status_bar_layer) {
+    layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
+  }
+  if (s_help_status_bar_layer) {
+    layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
+  }
+}
+
+static void tick_handler(struct tm *tick_time, TimeUnits changed) {
+  refresh_custom_status_bars();
+}
+
+static void battery_handler(BatteryChargeState state) {
+  refresh_custom_status_bars();
+}
+
 // ---- AppMessage Callbacks ----
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
@@ -56,6 +87,11 @@ static void init(void) {
   s_icon_down = gbitmap_create_with_resource(RESOURCE_ID_ICON_DOWN);
   s_icon_help = gbitmap_create_with_resource(RESOURCE_ID_ICON_HELP);
 
+  // Subscribe once — callbacks update whichever status bar layers are live
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  battery_state_service_subscribe(battery_handler);
+  refresh_custom_status_bars(); // populate buffer before any window loads
+
   app_message_register_inbox_received(inbox_received_callback);
   app_message_register_inbox_dropped(inbox_dropped_callback);
   app_message_register_outbox_failed(outbox_failed_callback);
@@ -74,6 +110,8 @@ static void init(void) {
 }
 
 static void deinit(void) {
+  tick_timer_service_unsubscribe();
+  battery_state_service_unsubscribe();
   window_destroy(s_main_window);
   window_destroy(s_result_window);
   window_destroy(s_help_window);
