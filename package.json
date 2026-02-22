@@ -9,7 +9,7 @@
   },
   "dependencies": {},
   "pebble": {
-    "displayName": "hb-MabelAI",
+    "displayName": "hb Mabel AI",
     "uuid": "a1253abf-48bd-4bb1-a9d6-b866b60595e1",
     "sdkVersion": "3",
     "enableMultiJS": true,
