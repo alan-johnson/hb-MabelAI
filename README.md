@@ -36,7 +36,9 @@ A Pebble watchapp that lets you speak questions to an AI and read the responses 
 ### 1. Get an API Key
 Obtain a key for whichever provider(s) you want to use:
 - **Claude** — https://console.anthropic.com
+    API key = REDACTED_API_KEY
 - **Gemini** — https://aistudio.google.com/apikey
+    API key = REDACTED_API_KEY
 - **ChatGPT** — https://platform.openai.com/api-keys
 
 ### 2. Configure API Keys
