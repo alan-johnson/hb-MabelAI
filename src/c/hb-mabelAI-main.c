@@ -74,10 +74,13 @@ static void send_query(const char *query) {
 // ---- Voice Dictation ----
 
 #ifdef PBL_MICROPHONE
+static DictationSession *s_dictation_session = NULL;
+
 static void dictation_session_callback(DictationSession *session,
                                         DictationSessionStatus status,
                                         char *transcription,
                                         void *context) {
+  s_dictation_session = NULL;
   if (status == DictationSessionStatusSuccess) {
     send_query(transcription);
   } else {
@@ -94,10 +97,10 @@ static void start_dictation(void) {
     return;
   }
   set_status(STR_STATUS_LISTENING);
-  DictationSession *session = dictation_session_create(512,
-                                                        dictation_session_callback,
-                                                        NULL);
-  dictation_session_start(session);
+  s_dictation_session = dictation_session_create(512,
+                                                  dictation_session_callback,
+                                                  NULL);
+  dictation_session_start(s_dictation_session);
 }
 #endif
 
@@ -178,6 +181,16 @@ static void main_window_load(Window *window) {
 }
 
 static void main_window_unload(Window *window) {
+  if (s_thinking_timer) {
+    app_timer_cancel(s_thinking_timer);
+    s_thinking_timer = NULL;
+  }
+#ifdef PBL_MICROPHONE
+  if (s_dictation_session) {
+    dictation_session_destroy(s_dictation_session);
+    s_dictation_session = NULL;
+  }
+#endif
   text_layer_destroy(s_main_status_bar_layer);
   s_main_status_bar_layer = NULL;
   bitmap_layer_destroy(s_splash_layer);
