@@ -5,13 +5,16 @@ static ActionBarLayer *s_confirm_action_bar;
 static TextLayer      *s_confirm_title_layer;
 static TextLayer      *s_confirm_text_layer;
 static char            s_confirm_buf[512];
+static char            s_confirm_display_buf[512 + sizeof("\n\n" STR_CONFIRM_HINT)];
 
 // ---- Public: store transcription text and refresh if window is live ----
 
 void show_confirmation(const char *text) {
   snprintf(s_confirm_buf, sizeof(s_confirm_buf), "%s", text);
+  snprintf(s_confirm_display_buf, sizeof(s_confirm_display_buf),
+           "%s\n\n" STR_CONFIRM_HINT, text);
   if (s_confirm_text_layer) {
-    text_layer_set_text(s_confirm_text_layer, s_confirm_buf);
+    text_layer_set_text(s_confirm_text_layer, s_confirm_display_buf);
   }
 }
 
@@ -73,8 +76,8 @@ static void confirm_window_load(Window *window) {
   text_layer_set_text_color(s_confirm_text_layer, GColorBlack);
   text_layer_set_background_color(s_confirm_text_layer, GColorClear);
   text_layer_set_text_alignment(s_confirm_text_layer, GTextAlignmentLeft);
-  text_layer_set_overflow_mode(s_confirm_text_layer, GTextOverflowModeTrailingEllipsis);
-  text_layer_set_text(s_confirm_text_layer, s_confirm_buf);
+  text_layer_set_overflow_mode(s_confirm_text_layer, GTextOverflowModeWordWrap);
+  text_layer_set_text(s_confirm_text_layer, s_confirm_display_buf);
   layer_add_child(window_layer, text_layer_get_layer(s_confirm_text_layer));
 
   // Custom status bar — added last so it renders on top

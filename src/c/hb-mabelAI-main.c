@@ -12,7 +12,7 @@
 static BitmapLayer    *s_splash_layer;
 static GBitmap        *s_splash_bitmap;
 static Layer          *s_bubble_layer;
-static GPath          *s_bubble_tail;
+static GPath          *s_bubble_path;
 static TextLayer      *s_prompt_layer;
 static ActionBarLayer *s_main_action_bar;
 
@@ -160,37 +160,23 @@ static void main_click_config_provider(void *context) {
 }
 
 // ---- Speech bubble drawing ----
-// Tail triangle: points relative to origin; gpath_move_to shifts them to the
-// bubble body's bottom edge at draw time. Base spans x=18..32, tip at x=10.
-static const GPathInfo s_tail_path_info = {
-  .num_points = 3,
-  .points = (GPoint[]) {{18, -1}, {10, 11}, {32, -1}}
-};
+// Complete bubble outline as a single closed polygon (15 pts), set in main_window_load.
+// Rounded corners are approximated with a 45° midpoint (adequate at Pebble resolution).
+// Tail base at 25% from left; tip at 50% toward Mabel.
+static GPoint    s_bubble_pts[15];
+static GPathInfo s_bubble_path_info = { .num_points = 15, .points = s_bubble_pts };
 
 static void bubble_update_proc(Layer *layer, GContext *ctx) {
-  if (!s_bubble_tail) return;
-  GRect b      = layer_get_bounds(layer);
-  int   body_h = b.size.h - 12;                          // 12px reserved for tail
-  GRect body   = GRect(1, 1, b.size.w - 2, body_h - 1);
+  if (!s_bubble_path) return;
 
-  // White filled body
+  // White interior fill
   graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_fill_rect(ctx, body, 8, GCornersAll);
+  gpath_draw_filled(ctx, s_bubble_path);
 
-  // Black outline of body
+  // Black outline — single closed polygon, no horizontal base line at tail
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_stroke_width(ctx, 2);
-  graphics_draw_round_rect(ctx, body, 8);
-
-  // White tail fill — covers the bottom outline so tail merges into body
-  gpath_move_to(s_bubble_tail, GPoint(0, body_h));
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  gpath_draw_filled(ctx, s_bubble_tail);
-
-  // Two visible sides of the tail (not the base — it's hidden inside the body)
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_draw_line(ctx, GPoint(18, body_h - 1), GPoint(10, body_h + 11));
-  graphics_draw_line(ctx, GPoint(10, body_h + 11), GPoint(32, body_h - 1));
+  gpath_draw_outline(ctx, s_bubble_path);
 }
 
 // ---- Window lifecycle ----
@@ -211,9 +197,35 @@ static void main_window_load(Window *window) {
   int half_h    = content_h / 2;
 
   int body_h = half_h - 12;  // bubble body height (12px reserved for tail)
+  int base_x = content_w / 4;   // tail base at 25% from left
+  int tip_x  = content_w / 2;   // tip toward Mabel (centered)
+  int w      = content_w;        // shorthand
+
+  // Build the complete bubble polygon (clockwise from top-left).
+  // Corners use one 45° midpoint each (radius ≈ 8px).
+  // Points 0–2:  top-left corner
+  s_bubble_pts[0]  = GPoint(1,     9);
+  s_bubble_pts[1]  = GPoint(3,     3);
+  s_bubble_pts[2]  = GPoint(9,     1);
+  // Points 3–5:  top-right corner
+  s_bubble_pts[3]  = GPoint(w - 9, 1);
+  s_bubble_pts[4]  = GPoint(w - 3, 3);
+  s_bubble_pts[5]  = GPoint(w - 1, 9);
+  // Points 6–8:  bottom-right corner
+  s_bubble_pts[6]  = GPoint(w - 1, body_h - 8);
+  s_bubble_pts[7]  = GPoint(w - 3, body_h - 2);
+  s_bubble_pts[8]  = GPoint(w - 9, body_h);
+  // Points 9–11: tail (right base → tip → left base)
+  s_bubble_pts[9]  = GPoint(base_x + 8, body_h);
+  s_bubble_pts[10] = GPoint(tip_x,      body_h + 11);
+  s_bubble_pts[11] = GPoint(base_x - 8, body_h);
+  // Points 12–14: bottom-left corner
+  s_bubble_pts[12] = GPoint(9,     body_h);
+  s_bubble_pts[13] = GPoint(3,     body_h - 2);
+  s_bubble_pts[14] = GPoint(1,     body_h - 8);
 
   // Top half: speech bubble
-  s_bubble_tail  = gpath_create(&s_tail_path_info);
+  s_bubble_path  = gpath_create(&s_bubble_path_info);
   s_bubble_layer = layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
   layer_set_update_proc(s_bubble_layer, bubble_update_proc);
   layer_add_child(window_layer, s_bubble_layer);
@@ -271,8 +283,8 @@ static void main_window_unload(Window *window) {
   s_main_status_bar_layer = NULL;
   layer_destroy(s_bubble_layer);
   s_bubble_layer = NULL;
-  gpath_destroy(s_bubble_tail);
-  s_bubble_tail = NULL;
+  gpath_destroy(s_bubble_path);
+  s_bubble_path = NULL;
   bitmap_layer_destroy(s_splash_layer);
   gbitmap_destroy(s_splash_bitmap);
   text_layer_destroy(s_prompt_layer);
