@@ -33,8 +33,13 @@
       "media": [
       {
         "type": "bitmap",
-        "name": "MABEL_DOG",
-        "file": "images/mabel_80x80.png"
+        "name": "MABEL_DOG_BW",
+        "file": "images/mabel-new-80x80bw.png"
+      },
+      {
+        "type": "bitmap",
+        "name": "MABEL_DOG_CLR",
+        "file": "images/mabel-face-color-80x80clr.png"
       },
       {
         "type": "bitmap",
@@ -60,6 +65,11 @@
         "type": "bitmap",
         "name": "ICON_MENU",
         "file": "images/icon_menu.png"
+      },
+      {
+        "type": "bitmap",
+        "name": "ICON_CHECK",
+        "file": "images/icon_check.png"
       }
     ]
     }

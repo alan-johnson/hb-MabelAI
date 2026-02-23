@@ -16,6 +16,7 @@ extern GBitmap *s_icon_up;
 extern GBitmap *s_icon_down;
 extern GBitmap *s_icon_help;
 extern GBitmap *s_icon_menu;
+extern GBitmap *s_icon_check;
 extern Window  *s_main_window;
 extern Window  *s_result_window;
 extern Window  *s_help_window;

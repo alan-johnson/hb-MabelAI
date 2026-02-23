@@ -1,10 +1,10 @@
 #include "hb-mabelAI.h"
 
 // ---- Private layer state ----
-static TextLayer *s_confirm_title_layer;
-static TextLayer *s_confirm_text_layer;
-static TextLayer *s_confirm_hint_layer;
-static char       s_confirm_buf[512];
+static ActionBarLayer *s_confirm_action_bar;
+static TextLayer      *s_confirm_title_layer;
+static TextLayer      *s_confirm_text_layer;
+static char            s_confirm_buf[512];
 
 // ---- Public: store transcription text and refresh if window is live ----
 
@@ -31,17 +31,8 @@ static void confirm_select_click_handler(ClickRecognizerRef recognizer, void *co
   send_query(s_query_buffer);
 }
 
-#ifdef PBL_ROUND
-static void confirm_back_click_handler(ClickRecognizerRef recognizer, void *context) {
-  window_stack_pop(false);
-}
-#endif
-
 static void confirm_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, confirm_select_click_handler);
-#ifdef PBL_ROUND
-  window_single_click_subscribe(BUTTON_ID_BACK, confirm_back_click_handler);
-#endif
 }
 
 // ---- Window lifecycle ----
@@ -50,16 +41,23 @@ static void confirm_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
+  // Action bar — checkmark on SELECT to send
+  s_confirm_action_bar = action_bar_layer_create();
+  action_bar_layer_add_to_window(s_confirm_action_bar, window);
+  action_bar_layer_set_click_config_provider(s_confirm_action_bar, confirm_click_config_provider);
+  action_bar_layer_set_icon(s_confirm_action_bar, BUTTON_ID_SELECT, s_icon_check);
+
+  int content_w = bounds.size.w - ACTION_BAR_WIDTH;
 #ifdef PBL_ROUND
   int h_pad = 14;
 #else
-  int h_pad = 6;
+  int h_pad = 4;
 #endif
-  int content_w = bounds.size.w - h_pad * 2;
+  int text_w = content_w - h_pad;
   int y = STATUS_BAR_LAYER_HEIGHT + 6;
 
   // Title: "Send to Mabel?"
-  s_confirm_title_layer = text_layer_create(GRect(h_pad, y, content_w, 22));
+  s_confirm_title_layer = text_layer_create(GRect(h_pad, y, text_w, 22));
   text_layer_set_font(s_confirm_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_color(s_confirm_title_layer, GColorBlack);
   text_layer_set_background_color(s_confirm_title_layer, GColorClear);
@@ -68,10 +66,9 @@ static void confirm_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_confirm_title_layer));
   y += 26;
 
-  // Transcription text — fills space between title and hint
-  int hint_h = 28;
-  int text_h = bounds.size.h - y - hint_h - 4;
-  s_confirm_text_layer = text_layer_create(GRect(h_pad, y, content_w, text_h));
+  // Transcription text — fills remaining space below title
+  int text_h = bounds.size.h - y - 4;
+  s_confirm_text_layer = text_layer_create(GRect(h_pad, y, text_w, text_h));
   text_layer_set_font(s_confirm_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_color(s_confirm_text_layer, GColorBlack);
   text_layer_set_background_color(s_confirm_text_layer, GColorClear);
@@ -79,18 +76,6 @@ static void confirm_window_load(Window *window) {
   text_layer_set_overflow_mode(s_confirm_text_layer, GTextOverflowModeTrailingEllipsis);
   text_layer_set_text(s_confirm_text_layer, s_confirm_buf);
   layer_add_child(window_layer, text_layer_get_layer(s_confirm_text_layer));
-
-  // Hint at bottom
-  s_confirm_hint_layer = text_layer_create(
-      GRect(h_pad, bounds.size.h - hint_h, content_w, hint_h));
-  text_layer_set_font(s_confirm_hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-  text_layer_set_text_color(s_confirm_hint_layer, GColorDarkGray);
-  text_layer_set_background_color(s_confirm_hint_layer, GColorClear);
-  text_layer_set_text_alignment(s_confirm_hint_layer, GTextAlignmentCenter);
-  text_layer_set_text(s_confirm_hint_layer, STR_CONFIRM_HINT);
-  layer_add_child(window_layer, text_layer_get_layer(s_confirm_hint_layer));
-
-  window_set_click_config_provider(window, confirm_click_config_provider);
 
   // Custom status bar — added last so it renders on top
   s_confirm_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
@@ -103,8 +88,7 @@ static void confirm_window_unload(Window *window) {
   s_confirm_title_layer = NULL;
   text_layer_destroy(s_confirm_text_layer);
   s_confirm_text_layer = NULL;
-  text_layer_destroy(s_confirm_hint_layer);
-  s_confirm_hint_layer = NULL;
+  action_bar_layer_destroy(s_confirm_action_bar);
 }
 
 // ---- Public: return handlers for use in init ----

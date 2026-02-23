@@ -17,7 +17,9 @@ static void refresh_result_layers(void) {
     text_layer_set_text(s_request_text, s_query_buffer);
   }
   text_layer_set_text(s_response_layer, s_response_buffer);
-  GRect bounds    = layer_get_bounds(scroll_layer_get_layer(s_scroll_layer));
+  GRect bounds = layer_get_bounds(scroll_layer_get_layer(s_scroll_layer));
+  // Reset to unconstrained height before measuring so word-wrap height is accurate
+  text_layer_set_size(s_response_layer, GSize(bounds.size.w, 8000));
   GSize text_size = text_layer_get_content_size(s_response_layer);
   text_layer_set_size(s_response_layer, GSize(bounds.size.w, text_size.h + 10));
   scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, text_size.h + 20));

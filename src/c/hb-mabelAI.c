@@ -10,6 +10,7 @@ GBitmap *s_icon_up;
 GBitmap *s_icon_down;
 GBitmap *s_icon_help;
 GBitmap *s_icon_menu;
+GBitmap *s_icon_check;
 Window  *s_main_window;
 Window  *s_result_window;
 Window  *s_help_window;
@@ -40,13 +41,16 @@ void refresh_custom_status_bars(void) {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
   BatteryChargeState batt = battery_state_service_peek();
-#ifdef PBL_ROUND
-  snprintf(s_status_bar_text, sizeof(s_status_bar_text),
-           "%02d:%02d %d%%", t->tm_hour, t->tm_min, batt.charge_percent);
-#else
-  snprintf(s_status_bar_text, sizeof(s_status_bar_text),
-           "%02d:%02d  BAT: %d%%", t->tm_hour, t->tm_min, batt.charge_percent);
-#endif
+  if (clock_is_24h_style()) {
+    snprintf(s_status_bar_text, sizeof(s_status_bar_text),
+             "%02d:%02d | %d%%", t->tm_hour, t->tm_min, batt.charge_percent);
+  } else {
+    int hour12 = t->tm_hour % 12;
+    if (hour12 == 0) hour12 = 12;
+    snprintf(s_status_bar_text, sizeof(s_status_bar_text),
+             "%d:%02d %s | %d%%", hour12, t->tm_min,
+             t->tm_hour < 12 ? "AM" : "PM", batt.charge_percent);
+  }
   if (s_main_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
   if (s_result_status_bar_layer)  layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
   if (s_help_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
@@ -111,7 +115,8 @@ static void init(void) {
   s_icon_up   = gbitmap_create_with_resource(RESOURCE_ID_ICON_UP);
   s_icon_down = gbitmap_create_with_resource(RESOURCE_ID_ICON_DOWN);
   s_icon_help = gbitmap_create_with_resource(RESOURCE_ID_ICON_HELP);
-  s_icon_menu = gbitmap_create_with_resource(RESOURCE_ID_ICON_MENU);
+  s_icon_menu  = gbitmap_create_with_resource(RESOURCE_ID_ICON_MENU);
+  s_icon_check = gbitmap_create_with_resource(RESOURCE_ID_ICON_CHECK);
 
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
   battery_state_service_subscribe(battery_handler);
@@ -157,6 +162,7 @@ static void deinit(void) {
   gbitmap_destroy(s_icon_down);
   gbitmap_destroy(s_icon_help);
   gbitmap_destroy(s_icon_menu);
+  gbitmap_destroy(s_icon_check);
 }
 
 int main(void) {

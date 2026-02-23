@@ -4,6 +4,10 @@
 // Comment out before deploying to a real watch.
 #define EMULATOR
 
+#ifdef EMULATOR
+  #define TEST_QUERY "What season is corn harvested in Iowa?"
+#endif
+
 // ---- Private layer state ----
 static BitmapLayer    *s_splash_layer;
 static GBitmap        *s_splash_bitmap;
@@ -118,7 +122,7 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
     set_status(STR_STATUS_NO_PHONE);
     return;
   }
-  show_confirmation("What is the capital of France?");
+  show_confirmation(TEST_QUERY);
 #ifdef PBL_ROUND
   window_stack_push(s_confirm_window, false);
 #else
@@ -171,8 +175,12 @@ static void main_window_load(Window *window) {
   int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
   int half_h    = content_h / 2;
 
-  // Top half: splash image (below status bar)
-  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG);
+  // Top half: splash image (below status bar) — color or B&W based on platform
+#ifdef PBL_COLOR
+  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_CLR);
+#else
+  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_BW);
+#endif
   s_splash_layer  = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
