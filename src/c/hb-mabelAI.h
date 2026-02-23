@@ -8,7 +8,7 @@
 #define KEY_STATUS    2
 
 // ---- Shared state (defined in hb-claudeAI.c) ----
-extern char    s_response_buffer[2048];
+extern char    s_response_buffer[1804];
 extern bool    s_is_loading;
 extern GBitmap *s_icon_mic;
 extern GBitmap *s_icon_up;
@@ -43,3 +43,5 @@ extern TextLayer *s_result_status_bar_layer;
 extern TextLayer *s_help_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
+// Creates a full-width status bar TextLayer, adds it to window_layer, and returns it.
+TextLayer *create_status_bar(Layer *window_layer, int width);

@@ -97,14 +97,7 @@ static void result_window_load(Window *window) {
   refresh_result_layers();
 
   // Custom status bar — added last so it renders on top of the action bar
-  s_result_status_bar_layer = text_layer_create(GRect(0, 0, bounds.size.w, STATUS_BAR_LAYER_HEIGHT));
-  text_layer_set_background_color(s_result_status_bar_layer, GColorBlack);
-  text_layer_set_text_color(s_result_status_bar_layer, GColorWhite);
-  text_layer_set_font(s_result_status_bar_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text_alignment(s_result_status_bar_layer, GTextAlignmentCenter);
-  text_layer_set_overflow_mode(s_result_status_bar_layer, GTextOverflowModeTrailingEllipsis);
-  text_layer_set_text(s_result_status_bar_layer, s_status_bar_text);
-  layer_add_child(window_layer, text_layer_get_layer(s_result_status_bar_layer));
+  s_result_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
 }
 
 static void result_window_unload(Window *window) {

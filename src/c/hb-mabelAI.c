@@ -1,8 +1,8 @@
 #include "hb-mabelAI.h"
 
 // ---- Shared state definitions ----
-char    s_response_buffer[2048];
-static char s_status_buffer[128];   // persistent copy of inbox status strings
+char    s_response_buffer[1804];
+static char s_status_buffer[64];    // persistent copy of inbox status strings
 bool    s_is_loading = false;
 GBitmap *s_icon_mic;
 GBitmap *s_icon_up;
@@ -17,6 +17,18 @@ char      s_status_bar_text[32]       = "";
 TextLayer *s_main_status_bar_layer   = NULL;
 TextLayer *s_result_status_bar_layer = NULL;
 TextLayer *s_help_status_bar_layer   = NULL;
+
+TextLayer *create_status_bar(Layer *window_layer, int width) {
+  TextLayer *bar = text_layer_create(GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT));
+  text_layer_set_background_color(bar, GColorBlack);
+  text_layer_set_text_color(bar, GColorWhite);
+  text_layer_set_font(bar, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_text_alignment(bar, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(bar, GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text(bar, s_status_bar_text);
+  layer_add_child(window_layer, text_layer_get_layer(bar));
+  return bar;
+}
 
 void refresh_custom_status_bars(void) {
   time_t now = time(NULL);
@@ -104,7 +116,7 @@ static void init(void) {
   app_message_register_inbox_received(inbox_received_callback);
   app_message_register_inbox_dropped(inbox_dropped_callback);
   app_message_register_outbox_failed(outbox_failed_callback);
-  app_message_open(2048, 512);
+  app_message_open(1804, 512);
 
   s_main_window = window_create();
   window_set_window_handlers(s_main_window, main_window_get_handlers());
