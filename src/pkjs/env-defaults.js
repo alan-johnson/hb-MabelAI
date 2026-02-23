@@ -4,11 +4,11 @@
 //   HB_MODEL, HB_MAX_TOKENS, HB_MAX_HISTORY
 
 module.exports = {
-  PROVIDER: 'claude',
-  CLAUDE_API_KEY: 'REDACTED_API_KEY',
-  GEMINI_API_KEY: '',
+  PROVIDER: 'gemini',
+  CLAUDE_API_KEY: '',
+  GEMINI_API_KEY: 'REDACTED_API_KEY',
   CHATGPT_API_KEY: '',
-  MODEL: 'claude-haiku-4-5-20251001',
+  MODEL: 'gemini-2.5-flash',
   MAX_TOKENS: 0,
   MAX_HISTORY: -1
 };
