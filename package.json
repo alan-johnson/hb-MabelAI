@@ -55,6 +55,11 @@
         "type": "bitmap",
         "name": "ICON_HELP",
         "file": "images/icon_help.png"
+      },
+      {
+        "type": "bitmap",
+        "name": "ICON_MENU",
+        "file": "images/icon_menu.png"
       }
     ]
     }

@@ -2,21 +2,27 @@
 
 // ---- Shared state definitions ----
 char    s_response_buffer[1804];
+char    s_query_buffer[512];
 static char s_status_buffer[64];    // persistent copy of inbox status strings
 bool    s_is_loading = false;
 GBitmap *s_icon_mic;
 GBitmap *s_icon_up;
 GBitmap *s_icon_down;
 GBitmap *s_icon_help;
+GBitmap *s_icon_menu;
 Window  *s_main_window;
 Window  *s_result_window;
 Window  *s_help_window;
+Window  *s_confirm_window;
+Window  *s_menu_window;
 
 // ---- Custom status bar shared state ----
-char      s_status_bar_text[32]       = "";
-TextLayer *s_main_status_bar_layer   = NULL;
-TextLayer *s_result_status_bar_layer = NULL;
-TextLayer *s_help_status_bar_layer   = NULL;
+char      s_status_bar_text[32]        = "";
+TextLayer *s_main_status_bar_layer    = NULL;
+TextLayer *s_result_status_bar_layer  = NULL;
+TextLayer *s_help_status_bar_layer    = NULL;
+TextLayer *s_confirm_status_bar_layer = NULL;
+TextLayer *s_menu_status_bar_layer    = NULL;
 
 TextLayer *create_status_bar(Layer *window_layer, int width) {
   TextLayer *bar = text_layer_create(GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT));
@@ -41,15 +47,11 @@ void refresh_custom_status_bars(void) {
   snprintf(s_status_bar_text, sizeof(s_status_bar_text),
            "%02d:%02d  BAT: %d%%", t->tm_hour, t->tm_min, batt.charge_percent);
 #endif
-  if (s_main_status_bar_layer) {
-    layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
-  }
-  if (s_result_status_bar_layer) {
-    layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
-  }
-  if (s_help_status_bar_layer) {
-    layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
-  }
+  if (s_main_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
+  if (s_result_status_bar_layer)  layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
+  if (s_help_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
+  if (s_confirm_status_bar_layer) layer_mark_dirty(text_layer_get_layer(s_confirm_status_bar_layer));
+  if (s_menu_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_menu_status_bar_layer));
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
@@ -71,7 +73,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if (response_t) {
     show_response(response_t->value->cstring);
     set_status(STR_STATUS_IDLE);
-    // Push result window; if already on top, response is updated in place
     if (window_stack_get_top_window() != s_result_window) {
 #ifdef PBL_ROUND
       window_stack_push(s_result_window, false);
@@ -83,35 +84,38 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if (status_t) {
     snprintf(s_status_buffer, sizeof(s_status_buffer), "%s", status_t->value->cstring);
     set_status(s_status_buffer);
+    show_response(s_status_buffer);  // also update the mabel section in result window
   }
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
   s_is_loading = false;
   set_status(STR_ERR_MSG_DROPPED);
+  show_response(STR_ERR_MSG_DROPPED);
 }
 
 static void outbox_failed_callback(DictionaryIterator *iterator,
                                     AppMessageResult reason, void *context) {
   s_is_loading = false;
   set_status(STR_ERR_OUTBOX_FAILED);
+  show_response(STR_ERR_OUTBOX_FAILED);
 }
 
 // ---- Init / Deinit ----
 
 static void init(void) {
   s_response_buffer[0] = '\0';
+  s_query_buffer[0]    = '\0';
 
-  // Shared bitmaps loaded once — used by both windows
   s_icon_mic  = gbitmap_create_with_resource(RESOURCE_ID_ICON_MIC);
   s_icon_up   = gbitmap_create_with_resource(RESOURCE_ID_ICON_UP);
   s_icon_down = gbitmap_create_with_resource(RESOURCE_ID_ICON_DOWN);
   s_icon_help = gbitmap_create_with_resource(RESOURCE_ID_ICON_HELP);
+  s_icon_menu = gbitmap_create_with_resource(RESOURCE_ID_ICON_MENU);
 
-  // Subscribe once — callbacks update whichever status bar layers are live
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
   battery_state_service_subscribe(battery_handler);
-  refresh_custom_status_bars(); // populate buffer before any window loads
+  refresh_custom_status_bars();
 
   app_message_register_inbox_received(inbox_received_callback);
   app_message_register_inbox_dropped(inbox_dropped_callback);
@@ -127,8 +131,12 @@ static void init(void) {
   s_help_window = window_create();
   window_set_window_handlers(s_help_window, help_window_get_handlers());
 
-  // Chalk (round) animation engine does not support the slide-in animation;
-  // using animated=true on PBL_ROUND produces "Animation does not exist" errors.
+  s_confirm_window = window_create();
+  window_set_window_handlers(s_confirm_window, confirm_window_get_handlers());
+
+  s_menu_window = window_create();
+  window_set_window_handlers(s_menu_window, menu_window_get_handlers());
+
 #ifdef PBL_ROUND
   window_stack_push(s_main_window, false);
 #else
@@ -142,10 +150,13 @@ static void deinit(void) {
   window_destroy(s_main_window);
   window_destroy(s_result_window);
   window_destroy(s_help_window);
+  window_destroy(s_confirm_window);
+  window_destroy(s_menu_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);
   gbitmap_destroy(s_icon_help);
+  gbitmap_destroy(s_icon_menu);
 }
 
 int main(void) {

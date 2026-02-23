@@ -2,7 +2,7 @@
 
 // Uncomment when running in the Pebble emulator (no real microphone).
 // Comment out before deploying to a real watch.
-//#define EMULATOR
+#define EMULATOR
 
 // ---- Private layer state ----
 static BitmapLayer    *s_splash_layer;
@@ -45,7 +45,6 @@ static void start_thinking_animation(void) {
 // ---- Public: update prompt / status text ----
 
 void set_status(const char *msg) {
-  // Cancel any running thinking animation
   if (s_thinking_timer) {
     app_timer_cancel(s_thinking_timer);
     s_thinking_timer = NULL;
@@ -57,7 +56,7 @@ void set_status(const char *msg) {
 
 // ---- Query dispatch ----
 
-static void send_query(const char *query) {
+void send_query(const char *query) {
   start_thinking_animation();
   s_is_loading = true;
   DictionaryIterator *out_iter;
@@ -82,7 +81,12 @@ static void dictation_session_callback(DictationSession *session,
                                         void *context) {
   s_dictation_session = NULL;
   if (status == DictationSessionStatusSuccess) {
-    send_query(transcription);
+    show_confirmation(transcription);
+#ifdef PBL_ROUND
+    window_stack_push(s_confirm_window, false);
+#else
+    window_stack_push(s_confirm_window, true);
+#endif
   } else {
     set_status(STR_ERR_DICTATION);
     s_is_loading = false;
@@ -108,13 +112,18 @@ static void start_dictation(void) {
 
 static void main_select_click_handler(ClickRecognizerRef recognizer, void *context) {
 #if defined(EMULATOR)
-  // Emulator has no real mic — send a fixed test query to exercise the full round-trip
+  // Emulator has no real mic — route through confirm window for full round-trip testing
   if (s_is_loading) return;
   if (!connection_service_peek_pebble_app_connection()) {
     set_status(STR_STATUS_NO_PHONE);
     return;
   }
-  send_query("What is the capital of France?");
+  show_confirmation("What is the capital of France?");
+#ifdef PBL_ROUND
+  window_stack_push(s_confirm_window, false);
+#else
+  window_stack_push(s_confirm_window, true);
+#endif
 #elif defined(PBL_MICROPHONE)
   start_dictation();
 #else
@@ -130,9 +139,18 @@ static void main_up_click_handler(ClickRecognizerRef recognizer, void *context) 
 #endif
 }
 
+static void main_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+#ifdef PBL_ROUND
+  window_stack_push(s_menu_window, false);
+#else
+  window_stack_push(s_menu_window, true);
+#endif
+}
+
 static void main_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, main_select_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP,     main_up_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN,   main_down_click_handler);
 }
 
 // ---- Window lifecycle ----
@@ -141,12 +159,13 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
-  // Action bar — mic icon on SELECT only
+  // Action bar — help top, mic middle, menu bottom
   s_main_action_bar = action_bar_layer_create();
   action_bar_layer_add_to_window(s_main_action_bar, window);
   action_bar_layer_set_click_config_provider(s_main_action_bar, main_click_config_provider);
-  action_bar_layer_set_icon(s_main_action_bar, BUTTON_ID_SELECT, s_icon_mic);
   action_bar_layer_set_icon(s_main_action_bar, BUTTON_ID_UP,     s_icon_help);
+  action_bar_layer_set_icon(s_main_action_bar, BUTTON_ID_SELECT, s_icon_mic);
+  action_bar_layer_set_icon(s_main_action_bar, BUTTON_ID_DOWN,   s_icon_menu);
 
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
   int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
@@ -157,7 +176,6 @@ static void main_window_load(Window *window) {
   s_splash_layer  = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
-  //bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpAssign);
   bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
   bitmap_layer_set_background_color(s_splash_layer, GColorDarkGray);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
