@@ -2,7 +2,7 @@
 
 // Uncomment when running in the Pebble emulator (no real microphone).
 // Comment out before deploying to a real watch.
-#define EMULATOR
+//#define EMULATOR
 
 #ifdef EMULATOR
   #define TEST_QUERY "What season is corn harvested in Iowa?"
