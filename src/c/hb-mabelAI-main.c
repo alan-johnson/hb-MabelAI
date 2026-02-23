@@ -11,6 +11,8 @@
 // ---- Private layer state ----
 static BitmapLayer    *s_splash_layer;
 static GBitmap        *s_splash_bitmap;
+static Layer          *s_bubble_layer;
+static GPath          *s_bubble_tail;
 static TextLayer      *s_prompt_layer;
 static ActionBarLayer *s_main_action_bar;
 
@@ -76,7 +78,7 @@ void send_query(const char *query) {
 
 // ---- Voice Dictation ----
 
-#ifdef PBL_MICROPHONE
+#if defined(PBL_MICROPHONE) && !defined(EMULATOR)
 static DictationSession *s_dictation_session = NULL;
 
 static void dictation_session_callback(DictationSession *session,
@@ -110,7 +112,7 @@ static void start_dictation(void) {
                                                   NULL);
   dictation_session_start(s_dictation_session);
 }
-#endif
+#endif  // PBL_MICROPHONE && !EMULATOR
 
 // ---- Click handlers ----
 
@@ -157,6 +159,40 @@ static void main_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_DOWN,   main_down_click_handler);
 }
 
+// ---- Speech bubble drawing ----
+// Tail triangle: points relative to origin; gpath_move_to shifts them to the
+// bubble body's bottom edge at draw time. Base spans x=18..32, tip at x=10.
+static const GPathInfo s_tail_path_info = {
+  .num_points = 3,
+  .points = (GPoint[]) {{18, -1}, {10, 11}, {32, -1}}
+};
+
+static void bubble_update_proc(Layer *layer, GContext *ctx) {
+  if (!s_bubble_tail) return;
+  GRect b      = layer_get_bounds(layer);
+  int   body_h = b.size.h - 12;                          // 12px reserved for tail
+  GRect body   = GRect(1, 1, b.size.w - 2, body_h - 1);
+
+  // White filled body
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, body, 8, GCornersAll);
+
+  // Black outline of body
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_context_set_stroke_width(ctx, 2);
+  graphics_draw_round_rect(ctx, body, 8);
+
+  // White tail fill — covers the bottom outline so tail merges into body
+  gpath_move_to(s_bubble_tail, GPoint(0, body_h));
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  gpath_draw_filled(ctx, s_bubble_tail);
+
+  // Two visible sides of the tail (not the base — it's hidden inside the body)
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_draw_line(ctx, GPoint(18, body_h - 1), GPoint(10, body_h + 11));
+  graphics_draw_line(ctx, GPoint(10, body_h + 11), GPoint(32, body_h - 1));
+}
+
 // ---- Window lifecycle ----
 
 static void main_window_load(Window *window) {
@@ -174,29 +210,19 @@ static void main_window_load(Window *window) {
   int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
   int half_h    = content_h / 2;
 
-  // Top half: splash image (below status bar) — color or B&W based on platform
-#ifdef PBL_COLOR
-  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_CLR);
-#else
-  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_BW);
-#endif
-#ifdef PBL_ROUND
-  // On round, extend to full width so the action bar overlays with no gap
-  s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, half_h));
-#else
-  s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
-#endif
-  bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
-  bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
-  bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
-  bitmap_layer_set_background_color(s_splash_layer, GColorDarkGray);
-  layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
+  int body_h = half_h - 12;  // bubble body height (12px reserved for tail)
 
-  // Bottom half: user prompt / status text
+  // Top half: speech bubble
+  s_bubble_tail  = gpath_create(&s_tail_path_info);
+  s_bubble_layer = layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
+  layer_set_update_proc(s_bubble_layer, bubble_update_proc);
+  layer_add_child(window_layer, s_bubble_layer);
+
+  // Status text inside bubble — transparent so bubble drawing shows through
 #ifdef PBL_ROUND
-  s_prompt_layer = text_layer_create(GRect(14, STATUS_BAR_LAYER_HEIGHT + half_h + 4, content_w - 28, half_h - 8));
+  s_prompt_layer = text_layer_create(GRect(14, STATUS_BAR_LAYER_HEIGHT + 5, content_w - 28, body_h - 10));
 #else
-  s_prompt_layer = text_layer_create(GRect(4, STATUS_BAR_LAYER_HEIGHT + half_h + 4, content_w - 8, half_h - 8));
+  s_prompt_layer = text_layer_create(GRect(6, STATUS_BAR_LAYER_HEIGHT + 4, content_w - 12, body_h - 8));
 #endif
   text_layer_set_font(s_prompt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_color(s_prompt_layer, GColorBlack);
@@ -205,6 +231,23 @@ static void main_window_load(Window *window) {
   text_layer_set_overflow_mode(s_prompt_layer, GTextOverflowModeWordWrap);
   set_status(STR_STATUS_IDLE);
   layer_add_child(window_layer, text_layer_get_layer(s_prompt_layer));
+
+  // Bottom half: Mabel image
+#ifdef PBL_COLOR
+  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_CLR);
+#else
+  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_BW);
+#endif
+#ifdef PBL_ROUND
+  s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT + half_h, bounds.size.w, content_h - half_h));
+#else
+  s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT + half_h, content_w, content_h - half_h));
+#endif
+  bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
+  bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
+  bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
+  bitmap_layer_set_background_color(s_splash_layer, GColorDarkGray);
+  layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
 
   // Action bar added after content layers so it renders on top of the splash image
   action_bar_layer_add_to_window(s_main_action_bar, window);
@@ -218,7 +261,7 @@ static void main_window_unload(Window *window) {
     app_timer_cancel(s_thinking_timer);
     s_thinking_timer = NULL;
   }
-#ifdef PBL_MICROPHONE
+#if defined(PBL_MICROPHONE) && !defined(EMULATOR)
   if (s_dictation_session) {
     dictation_session_destroy(s_dictation_session);
     s_dictation_session = NULL;
@@ -226,6 +269,10 @@ static void main_window_unload(Window *window) {
 #endif
   text_layer_destroy(s_main_status_bar_layer);
   s_main_status_bar_layer = NULL;
+  layer_destroy(s_bubble_layer);
+  s_bubble_layer = NULL;
+  gpath_destroy(s_bubble_tail);
+  s_bubble_tail = NULL;
   bitmap_layer_destroy(s_splash_layer);
   gbitmap_destroy(s_splash_bitmap);
   text_layer_destroy(s_prompt_layer);
