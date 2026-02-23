@@ -49,7 +49,7 @@ static void confirm_window_load(Window *window) {
 
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
 #ifdef PBL_ROUND
-  int h_pad = 14;
+  int h_pad = 34;  // title at y≈22 — circle clips x < 31, so 34 clears the edge
 #else
   int h_pad = 4;
 #endif

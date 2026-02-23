@@ -85,12 +85,12 @@ static void result_window_load(Window *window) {
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
   int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
 #ifdef PBL_ROUND
-  int h_pad = 12;
+  int h_pad = 36;  // request label at y≈18 — circle clips x < 36, so 36 clears the edge
 #else
   int h_pad = 2;
 #endif
   int text_w   = content_w - h_pad - 2;
-  int label_h  = 14;
+  int label_h  = 18;  // GOTHIC_14_BOLD renders ~18px tall; 14 clips the bottom
   int req_h    = content_h * 2 / 5;   // ~60px Basalt, ~65px Chalk
   int div_y    = STATUS_BAR_LAYER_HEIGHT + req_h;
   int scroll_h = content_h - req_h - label_h - 6;

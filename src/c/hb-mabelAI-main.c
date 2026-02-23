@@ -163,9 +163,8 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
-  // Action bar — help top, mic middle, menu bottom
+  // Action bar — help top, mic middle, menu bottom (added to window after content layers)
   s_main_action_bar = action_bar_layer_create();
-  action_bar_layer_add_to_window(s_main_action_bar, window);
   action_bar_layer_set_click_config_provider(s_main_action_bar, main_click_config_provider);
   action_bar_layer_set_icon(s_main_action_bar, BUTTON_ID_UP,     s_icon_help);
   action_bar_layer_set_icon(s_main_action_bar, BUTTON_ID_SELECT, s_icon_mic);
@@ -181,7 +180,12 @@ static void main_window_load(Window *window) {
 #else
   s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_BW);
 #endif
-  s_splash_layer  = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
+#ifdef PBL_ROUND
+  // On round, extend to full width so the action bar overlays with no gap
+  s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, half_h));
+#else
+  s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
+#endif
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
   bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
@@ -201,6 +205,9 @@ static void main_window_load(Window *window) {
   text_layer_set_overflow_mode(s_prompt_layer, GTextOverflowModeWordWrap);
   set_status(STR_STATUS_IDLE);
   layer_add_child(window_layer, text_layer_get_layer(s_prompt_layer));
+
+  // Action bar added after content layers so it renders on top of the splash image
+  action_bar_layer_add_to_window(s_main_action_bar, window);
 
   // Custom status bar — added last so it renders on top of the action bar
   s_main_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
