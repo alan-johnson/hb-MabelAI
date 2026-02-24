@@ -68,11 +68,6 @@
         "type": "bitmap",
         "name": "ICON_MENU",
         "file": "images/icon_menu.png"
-      },
-      {
-        "type": "bitmap",
-        "name": "ICON_CHECK",
-        "file": "images/icon_check.png"
       }
     ]
     }

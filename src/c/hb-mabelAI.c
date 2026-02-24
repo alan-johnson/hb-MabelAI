@@ -10,11 +10,9 @@ GBitmap *s_icon_up;
 GBitmap *s_icon_down;
 GBitmap *s_icon_help;
 GBitmap *s_icon_menu;
-GBitmap *s_icon_check;
 Window  *s_main_window;
 Window  *s_result_window;
 Window  *s_help_window;
-Window  *s_confirm_window;
 Window  *s_menu_window;
 Window  *s_reminders_window;
 
@@ -23,7 +21,6 @@ char      s_status_bar_text[32]        = "";
 TextLayer *s_main_status_bar_layer      = NULL;
 TextLayer *s_result_status_bar_layer    = NULL;
 TextLayer *s_help_status_bar_layer      = NULL;
-TextLayer *s_confirm_status_bar_layer   = NULL;
 TextLayer *s_menu_status_bar_layer      = NULL;
 TextLayer *s_reminders_status_bar_layer = NULL;
 
@@ -56,7 +53,6 @@ void refresh_custom_status_bars(void) {
   if (s_main_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
   if (s_result_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
   if (s_help_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
-  if (s_confirm_status_bar_layer)   layer_mark_dirty(text_layer_get_layer(s_confirm_status_bar_layer));
   if (s_menu_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_menu_status_bar_layer));
   if (s_reminders_status_bar_layer) layer_mark_dirty(text_layer_get_layer(s_reminders_status_bar_layer));
 }
@@ -130,7 +126,6 @@ static void init(void) {
   s_icon_down = gbitmap_create_with_resource(RESOURCE_ID_ICON_DOWN);
   s_icon_help = gbitmap_create_with_resource(RESOURCE_ID_ICON_HELP);
   s_icon_menu  = gbitmap_create_with_resource(RESOURCE_ID_ICON_MENU);
-  s_icon_check = gbitmap_create_with_resource(RESOURCE_ID_ICON_CHECK);
 
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
   battery_state_service_subscribe(battery_handler);
@@ -149,9 +144,6 @@ static void init(void) {
 
   s_help_window = window_create();
   window_set_window_handlers(s_help_window, help_window_get_handlers());
-
-  s_confirm_window = window_create();
-  window_set_window_handlers(s_confirm_window, confirm_window_get_handlers());
 
   s_menu_window = window_create();
   window_set_window_handlers(s_menu_window, menu_window_get_handlers());
@@ -172,7 +164,6 @@ static void deinit(void) {
   window_destroy(s_main_window);
   window_destroy(s_result_window);
   window_destroy(s_help_window);
-  window_destroy(s_confirm_window);
   window_destroy(s_menu_window);
   window_destroy(s_reminders_window);
   gbitmap_destroy(s_icon_mic);
@@ -180,7 +171,6 @@ static void deinit(void) {
   gbitmap_destroy(s_icon_down);
   gbitmap_destroy(s_icon_help);
   gbitmap_destroy(s_icon_menu);
-  gbitmap_destroy(s_icon_check);
 }
 
 int main(void) {

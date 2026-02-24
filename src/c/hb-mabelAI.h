@@ -18,11 +18,9 @@ extern GBitmap *s_icon_up;
 extern GBitmap *s_icon_down;
 extern GBitmap *s_icon_help;
 extern GBitmap *s_icon_menu;
-extern GBitmap *s_icon_check;
 extern Window  *s_main_window;
 extern Window  *s_result_window;
 extern Window  *s_help_window;
-extern Window  *s_confirm_window;
 extern Window  *s_menu_window;
 extern Window  *s_reminders_window;
 
@@ -33,7 +31,6 @@ extern char      s_status_bar_text[32];
 extern TextLayer *s_main_status_bar_layer;
 extern TextLayer *s_result_status_bar_layer;
 extern TextLayer *s_help_status_bar_layer;
-extern TextLayer *s_confirm_status_bar_layer;
 extern TextLayer *s_menu_status_bar_layer;
 extern TextLayer *s_reminders_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
@@ -58,12 +55,6 @@ WindowHandlers result_window_get_handlers(void);
 // ---- API provided by hb-mabelAI-help.c ----
 // Returns the WindowHandlers struct for the help window.
 WindowHandlers help_window_get_handlers(void);
-
-// ---- API provided by hb-mabelAI-confirm.c ----
-// Stores the transcription text and refreshes the confirm window if loaded.
-void show_confirmation(const char *transcription);
-// Returns the WindowHandlers struct for the confirm window.
-WindowHandlers confirm_window_get_handlers(void);
 
 // ---- API provided by hb-mabelAI-menu.c ----
 // Returns the WindowHandlers struct for the menu window.

@@ -87,12 +87,15 @@ static void dictation_session_callback(DictationSession *session,
                                         void *context) {
   s_dictation_session = NULL;
   if (status == DictationSessionStatusSuccess) {
-    show_confirmation(transcription);
+    snprintf(s_response_buffer, sizeof(s_response_buffer), "...");
+    if (window_stack_get_top_window() != s_result_window) {
 #ifdef PBL_ROUND
-    window_stack_push(s_confirm_window, false);
+      window_stack_push(s_result_window, false);
 #else
-    window_stack_push(s_confirm_window, true);
+      window_stack_push(s_result_window, true);
 #endif
+    }
+    send_query(transcription);
   } else {
     set_status(STR_ERR_DICTATION);
     s_is_loading = false;
@@ -124,12 +127,15 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
     set_status(STR_STATUS_NO_PHONE);
     return;
   }
-  show_confirmation(TEST_QUERY);
+  snprintf(s_response_buffer, sizeof(s_response_buffer), "...");
+  if (window_stack_get_top_window() != s_result_window) {
 #ifdef PBL_ROUND
-  window_stack_push(s_confirm_window, false);
+    window_stack_push(s_result_window, false);
 #else
-  window_stack_push(s_confirm_window, true);
+    window_stack_push(s_result_window, true);
 #endif
+  }
+  send_query(TEST_QUERY);
 #elif defined(PBL_MICROPHONE)
   start_dictation();
 #else
