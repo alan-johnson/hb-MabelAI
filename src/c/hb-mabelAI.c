@@ -12,21 +12,17 @@ GBitmap *s_icon_help;
 GBitmap *s_icon_menu;
 Window  *s_main_window;
 Window  *s_result_window;
-Window  *s_help_window;
+Window  *s_text_window;
 Window  *s_menu_window;
 Window  *s_reminders_window;
-Window  *s_about_window;
-Window  *s_legal_window;
 
 // ---- Custom status bar shared state ----
 char      s_status_bar_text[32]        = "";
 TextLayer *s_main_status_bar_layer      = NULL;
 TextLayer *s_result_status_bar_layer    = NULL;
-TextLayer *s_help_status_bar_layer      = NULL;
+TextLayer *s_text_status_bar_layer      = NULL;
 TextLayer *s_menu_status_bar_layer      = NULL;
 TextLayer *s_reminders_status_bar_layer = NULL;
-TextLayer *s_about_status_bar_layer     = NULL;
-TextLayer *s_legal_status_bar_layer     = NULL;
 
 TextLayer *create_status_bar(Layer *window_layer, int width) {
   TextLayer *bar = text_layer_create(GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT));
@@ -56,11 +52,9 @@ void refresh_custom_status_bars(void) {
   }
   if (s_main_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
   if (s_result_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
-  if (s_help_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
+  if (s_text_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_text_status_bar_layer));
   if (s_menu_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_menu_status_bar_layer));
   if (s_reminders_status_bar_layer) layer_mark_dirty(text_layer_get_layer(s_reminders_status_bar_layer));
-  if (s_about_status_bar_layer)     layer_mark_dirty(text_layer_get_layer(s_about_status_bar_layer));
-  if (s_legal_status_bar_layer)     layer_mark_dirty(text_layer_get_layer(s_legal_status_bar_layer));
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
@@ -148,20 +142,14 @@ static void init(void) {
   s_result_window = window_create();
   window_set_window_handlers(s_result_window, result_window_get_handlers());
 
-  s_help_window = window_create();
-  window_set_window_handlers(s_help_window, help_window_get_handlers());
+  s_text_window = window_create();
+  window_set_window_handlers(s_text_window, text_window_get_handlers());
 
   s_menu_window = window_create();
   window_set_window_handlers(s_menu_window, menu_window_get_handlers());
 
   s_reminders_window = window_create();
   window_set_window_handlers(s_reminders_window, reminders_window_get_handlers());
-
-  s_about_window = window_create();
-  window_set_window_handlers(s_about_window, about_window_get_handlers());
-
-  s_legal_window = window_create();
-  window_set_window_handlers(s_legal_window, legal_window_get_handlers());
 
 #ifdef PBL_ROUND
   window_stack_push(s_main_window, false);
@@ -175,11 +163,9 @@ static void deinit(void) {
   battery_state_service_unsubscribe();
   window_destroy(s_main_window);
   window_destroy(s_result_window);
-  window_destroy(s_help_window);
+  window_destroy(s_text_window);
   window_destroy(s_menu_window);
   window_destroy(s_reminders_window);
-  window_destroy(s_about_window);
-  window_destroy(s_legal_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);

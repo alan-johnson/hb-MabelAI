@@ -21,16 +21,18 @@ static void menu_select_callback(int index, void *context) {
   if (index == 0) {
     send_reminders_request();
   } else if (index == 3) {
+    window_set_user_data(s_text_window, (void *)STR_ABOUT_TEXT);
 #ifdef PBL_ROUND
-    window_stack_push(s_about_window, false);
+    window_stack_push(s_text_window, false);
 #else
-    window_stack_push(s_about_window, true);
+    window_stack_push(s_text_window, true);
 #endif
   } else if (index == 4) {
+    window_set_user_data(s_text_window, (void *)STR_LEGAL_TEXT);
 #ifdef PBL_ROUND
-    window_stack_push(s_legal_window, false);
+    window_stack_push(s_text_window, false);
 #else
-    window_stack_push(s_legal_window, true);
+    window_stack_push(s_text_window, true);
 #endif
   }
 }

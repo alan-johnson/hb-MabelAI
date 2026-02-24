@@ -144,10 +144,11 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
 }
 
 static void main_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  window_set_user_data(s_text_window, (void *)STR_HELP_TEXT);
 #ifdef PBL_ROUND
-  window_stack_push(s_help_window, false);
+  window_stack_push(s_text_window, false);
 #else
-  window_stack_push(s_help_window, true);
+  window_stack_push(s_text_window, true);
 #endif
 }
 

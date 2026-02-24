@@ -20,11 +20,9 @@ extern GBitmap *s_icon_help;
 extern GBitmap *s_icon_menu;
 extern Window  *s_main_window;
 extern Window  *s_result_window;
-extern Window  *s_help_window;
+extern Window  *s_text_window;
 extern Window  *s_menu_window;
 extern Window  *s_reminders_window;
-extern Window  *s_about_window;
-extern Window  *s_legal_window;
 
 // ---- Shared custom status bar ----
 // Shared text buffer — all windows' status TextLayers point to this.
@@ -32,11 +30,9 @@ extern char      s_status_bar_text[32];
 // Each window's status TextLayer — set in _load, cleared in _unload.
 extern TextLayer *s_main_status_bar_layer;
 extern TextLayer *s_result_status_bar_layer;
-extern TextLayer *s_help_status_bar_layer;
+extern TextLayer *s_text_status_bar_layer;
 extern TextLayer *s_menu_status_bar_layer;
 extern TextLayer *s_reminders_status_bar_layer;
-extern TextLayer *s_about_status_bar_layer;
-extern TextLayer *s_legal_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
 // Creates a full-width status bar TextLayer, adds it to window_layer, and returns it.
@@ -56,21 +52,13 @@ void show_response(const char *text);
 // Returns the WindowHandlers struct for the result window.
 WindowHandlers result_window_get_handlers(void);
 
-// ---- API provided by hb-mabelAI-help.c ----
-// Returns the WindowHandlers struct for the help window.
-WindowHandlers help_window_get_handlers(void);
+// ---- API provided by hb-mabelAI-textwindow.c ----
+// Shared scrollable text window. Set text via window_set_user_data before pushing.
+WindowHandlers text_window_get_handlers(void);
 
 // ---- API provided by hb-mabelAI-menu.c ----
 // Returns the WindowHandlers struct for the menu window.
 WindowHandlers menu_window_get_handlers(void);
-
-// ---- API provided by hb-mabelAI-about.c ----
-// Returns the WindowHandlers struct for the about window.
-WindowHandlers about_window_get_handlers(void);
-
-// ---- API provided by hb-mabelAI-legal.c ----
-// Returns the WindowHandlers struct for the legal window.
-WindowHandlers legal_window_get_handlers(void);
 
 // ---- API provided by hb-mabelAI-reminders.c ----
 // Copies text into the reminders buffer and refreshes the window if loaded.
