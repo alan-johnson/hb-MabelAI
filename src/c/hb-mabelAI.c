@@ -16,14 +16,16 @@ Window  *s_result_window;
 Window  *s_help_window;
 Window  *s_confirm_window;
 Window  *s_menu_window;
+Window  *s_reminders_window;
 
 // ---- Custom status bar shared state ----
 char      s_status_bar_text[32]        = "";
-TextLayer *s_main_status_bar_layer    = NULL;
-TextLayer *s_result_status_bar_layer  = NULL;
-TextLayer *s_help_status_bar_layer    = NULL;
-TextLayer *s_confirm_status_bar_layer = NULL;
-TextLayer *s_menu_status_bar_layer    = NULL;
+TextLayer *s_main_status_bar_layer      = NULL;
+TextLayer *s_result_status_bar_layer    = NULL;
+TextLayer *s_help_status_bar_layer      = NULL;
+TextLayer *s_confirm_status_bar_layer   = NULL;
+TextLayer *s_menu_status_bar_layer      = NULL;
+TextLayer *s_reminders_status_bar_layer = NULL;
 
 TextLayer *create_status_bar(Layer *window_layer, int width) {
   TextLayer *bar = text_layer_create(GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT));
@@ -51,11 +53,12 @@ void refresh_custom_status_bars(void) {
              "%d:%02d %s | %d%%", hour12, t->tm_min,
              t->tm_hour < 12 ? "AM" : "PM", batt.charge_percent);
   }
-  if (s_main_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
-  if (s_result_status_bar_layer)  layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
-  if (s_help_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
-  if (s_confirm_status_bar_layer) layer_mark_dirty(text_layer_get_layer(s_confirm_status_bar_layer));
-  if (s_menu_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_menu_status_bar_layer));
+  if (s_main_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
+  if (s_result_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
+  if (s_help_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_help_status_bar_layer));
+  if (s_confirm_status_bar_layer)   layer_mark_dirty(text_layer_get_layer(s_confirm_status_bar_layer));
+  if (s_menu_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_menu_status_bar_layer));
+  if (s_reminders_status_bar_layer) layer_mark_dirty(text_layer_get_layer(s_reminders_status_bar_layer));
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
@@ -71,8 +74,9 @@ static void battery_handler(BatteryChargeState state) {
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   s_is_loading = false;
 
-  Tuple *response_t = dict_find(iterator, KEY_RESPONSE);
-  Tuple *status_t   = dict_find(iterator, KEY_STATUS);
+  Tuple *response_t   = dict_find(iterator, KEY_RESPONSE);
+  Tuple *status_t     = dict_find(iterator, KEY_STATUS);
+  Tuple *reminders_t  = dict_find(iterator, KEY_REMINDERS_LIST);
 
   if (response_t) {
     show_response(response_t->value->cstring);
@@ -89,6 +93,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     snprintf(s_status_buffer, sizeof(s_status_buffer), "%s", status_t->value->cstring);
     set_status(s_status_buffer);
     show_response(s_status_buffer);  // also update the mabel section in result window
+  }
+  if (reminders_t) {
+    show_reminders(reminders_t->value->cstring);
+    if (window_stack_get_top_window() != s_reminders_window) {
+#ifdef PBL_ROUND
+      window_stack_push(s_reminders_window, false);
+#else
+      window_stack_push(s_reminders_window, true);
+#endif
+    }
   }
 }
 
@@ -142,6 +156,9 @@ static void init(void) {
   s_menu_window = window_create();
   window_set_window_handlers(s_menu_window, menu_window_get_handlers());
 
+  s_reminders_window = window_create();
+  window_set_window_handlers(s_reminders_window, reminders_window_get_handlers());
+
 #ifdef PBL_ROUND
   window_stack_push(s_main_window, false);
 #else
@@ -157,6 +174,7 @@ static void deinit(void) {
   window_destroy(s_help_window);
   window_destroy(s_confirm_window);
   window_destroy(s_menu_window);
+  window_destroy(s_reminders_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);

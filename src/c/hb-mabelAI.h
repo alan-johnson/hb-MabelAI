@@ -3,9 +3,11 @@
 #include "hb-strings.h"
 
 // AppMessage keys — must match hb-mabelAI.c and index.js
-#define KEY_QUERY     0
-#define KEY_RESPONSE  1
-#define KEY_STATUS    2
+#define KEY_QUERY             0
+#define KEY_RESPONSE          1
+#define KEY_STATUS            2
+#define KEY_REMINDERS_REQUEST 3
+#define KEY_REMINDERS_LIST    4
 
 // ---- Shared state (defined in hb-mabelAI.c) ----
 extern char    s_response_buffer[1804];
@@ -22,6 +24,7 @@ extern Window  *s_result_window;
 extern Window  *s_help_window;
 extern Window  *s_confirm_window;
 extern Window  *s_menu_window;
+extern Window  *s_reminders_window;
 
 // ---- Shared custom status bar ----
 // Shared text buffer — all windows' status TextLayers point to this.
@@ -32,6 +35,7 @@ extern TextLayer *s_result_status_bar_layer;
 extern TextLayer *s_help_status_bar_layer;
 extern TextLayer *s_confirm_status_bar_layer;
 extern TextLayer *s_menu_status_bar_layer;
+extern TextLayer *s_reminders_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
 // Creates a full-width status bar TextLayer, adds it to window_layer, and returns it.
@@ -64,3 +68,9 @@ WindowHandlers confirm_window_get_handlers(void);
 // ---- API provided by hb-mabelAI-menu.c ----
 // Returns the WindowHandlers struct for the menu window.
 WindowHandlers menu_window_get_handlers(void);
+
+// ---- API provided by hb-mabelAI-reminders.c ----
+// Copies text into the reminders buffer and refreshes the window if loaded.
+void show_reminders(const char *text);
+// Returns the WindowHandlers struct for the reminders window.
+WindowHandlers reminders_window_get_handlers(void);

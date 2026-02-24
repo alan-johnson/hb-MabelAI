@@ -23,6 +23,10 @@
 #define STR_SECTION_REQUEST    "request"
 #define STR_SECTION_MABEL      "mabel"
 
+// ---- Reminders window ----
+#define STR_SECTION_REMINDERS  "reminders"
+#define STR_NO_REMINDERS       "No reminders yet.\n\nAsk Mabel to set one!"
+
 // ---- Help window ----
 #define STR_HELP_TEXT \
   "How to use Mabel:\n\n" \

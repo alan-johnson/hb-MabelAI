@@ -26,9 +26,11 @@
       "configurable": true
     },
     "messageKeys": {
-      "KEY_QUERY":    0,
-      "KEY_RESPONSE": 1,
-      "KEY_STATUS":   2
+      "KEY_QUERY":             0,
+      "KEY_RESPONSE":          1,
+      "KEY_STATUS":            2,
+      "KEY_REMINDERS_REQUEST": 3,
+      "KEY_REMINDERS_LIST":    4
     },
     "resources": {
       "media": [

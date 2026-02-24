@@ -7,10 +7,20 @@ static SimpleMenuItem    s_menu_items[5];
 
 // ---- Callbacks ----
 
+static void send_reminders_request(void) {
+  DictionaryIterator *iter;
+  AppMessageResult result = app_message_outbox_begin(&iter);
+  if (result != APP_MSG_OK) return;
+  int32_t val = 1;
+  dict_write_int(iter, KEY_REMINDERS_REQUEST, &val, sizeof(int32_t), true);
+  app_message_outbox_send();
+}
+
 static void menu_select_callback(int index, void *context) {
-  // No functionality defined yet
-  (void)index;
   (void)context;
+  if (index == 0) {
+    send_reminders_request();
+  }
 }
 
 // ---- Window lifecycle ----

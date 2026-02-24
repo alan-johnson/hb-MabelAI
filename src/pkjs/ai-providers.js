@@ -3,11 +3,18 @@
 // a settings object: { apiKey, model, maxTokens, maxHistory }
 // Callbacks: onSuccess(replyText), onError(statusMessage)
 
-var SYSTEM_PROMPT =
+var BASE_SYSTEM_PROMPT =
   'You are a helpful assistant on a Pebble smartwatch. ' +
   'Responses must be concise (under 250 words) and plain text only — ' +
   'no markdown, no bullet symbols, no special characters. ' +
   'Be direct and informative.';
+
+function buildSystemPrompt(settings) {
+  if (settings && settings.systemAddendum) {
+    return BASE_SYSTEM_PROMPT + '\n\n' + settings.systemAddendum;
+  }
+  return BASE_SYSTEM_PROMPT;
+}
 
 // ---- Claude (Anthropic) ----
 
@@ -19,7 +26,7 @@ function askClaude(query, history, settings, onSuccess, onError) {
   var body = JSON.stringify({
     model:      settings.model,
     max_tokens: settings.maxTokens,
-    system:     SYSTEM_PROMPT,
+    system:     buildSystemPrompt(settings),
     messages:   messages
   });
 
@@ -78,7 +85,7 @@ function askGemini(query, history, settings, onSuccess, onError) {
       });
 
   var body = JSON.stringify({
-    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    system_instruction: { parts: [{ text: buildSystemPrompt(settings) }] },
     contents:           contents,
     generationConfig:   { maxOutputTokens: settings.maxTokens }
   });
@@ -137,9 +144,10 @@ function askGemini(query, history, settings, onSuccess, onError) {
 // ---- ChatGPT (OpenAI) ----
 
 function askChatGPT(query, history, settings, onSuccess, onError) {
+  var sysPrompt = buildSystemPrompt(settings);
   var messages = settings.maxHistory === 0
-    ? [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: query }]
-    : [{ role: 'system', content: SYSTEM_PROMPT }].concat(history);
+    ? [{ role: 'system', content: sysPrompt }, { role: 'user', content: query }]
+    : [{ role: 'system', content: sysPrompt }].concat(history);
 
   var body = JSON.stringify({
     model:      settings.model,
