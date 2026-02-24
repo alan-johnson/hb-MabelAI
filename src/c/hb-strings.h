@@ -15,10 +15,6 @@
 #define STR_ERR_MSG_DROPPED    "Message dropped. Try again."
 #define STR_ERR_OUTBOX_FAILED  "Send failed. Try again."
 
-// ---- Confirm window ----
-#define STR_CONFIRM_TITLE      "Send to Mabel?"
-#define STR_CONFIRM_HINT       "SELECT: send  BACK: cancel"
-
 // ---- Results window section labels ----
 #define STR_SECTION_REQUEST    "request"
 #define STR_SECTION_MABEL      "mabel"
@@ -26,6 +22,26 @@
 // ---- Reminders window ----
 #define STR_SECTION_REMINDERS  "reminders"
 #define STR_NO_REMINDERS       "No reminders yet.\n\nAsk Mabel to set one!"
+
+// ---- Menu window ----
+#define STR_MENU_ITEM_REMINDERS  "Reminders"
+#define STR_MENU_ITEM_TIMERS     "Timers"
+#define STR_MENU_ITEM_ALARMS     "Alarms"
+#define STR_MENU_ITEM_ABOUT      "About"
+#define STR_MENU_ITEM_LEGAL      "Legal"
+
+// ---- About window ----
+#define STR_ABOUT_TEXT \
+  "Mabel AI\n\n" \
+  "Version 1.0\n\n" \
+  "Your AI assistant on your wrist.\n\n" \
+  "More details coming soon."
+
+// ---- Legal window ----
+#define STR_LEGAL_TEXT \
+  "Terms & Licenses\n\n" \
+  "Legal information and third-party license notices will appear here.\n\n" \
+  "More details coming soon."
 
 // ---- Help window ----
 #define STR_HELP_TEXT \

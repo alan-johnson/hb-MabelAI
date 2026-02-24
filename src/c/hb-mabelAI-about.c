@@ -1,0 +1,87 @@
+#include "hb-mabelAI.h"
+
+// ---- Private layer state ----
+static ScrollLayer *s_about_scroll_layer;
+static TextLayer   *s_about_text_layer;
+
+// ---- Chalk click handlers ----
+// scroll_layer_set_click_config_onto_window takes over the window click config,
+// making it impossible to also subscribe to BACK. On Chalk we need a custom
+// provider so we can pop without animation and avoid "Animation does not exist".
+
+#ifdef PBL_ROUND
+static void about_scroll_up(ClickRecognizerRef recognizer, void *context) {
+  GPoint offset = scroll_layer_get_content_offset(s_about_scroll_layer);
+  scroll_layer_set_content_offset(s_about_scroll_layer,
+                                  GPoint(0, offset.y + 30), false);
+}
+static void about_scroll_down(ClickRecognizerRef recognizer, void *context) {
+  GPoint offset = scroll_layer_get_content_offset(s_about_scroll_layer);
+  scroll_layer_set_content_offset(s_about_scroll_layer,
+                                  GPoint(0, offset.y - 30), false);
+}
+static void about_back_click(ClickRecognizerRef recognizer, void *context) {
+  window_stack_pop(false);
+}
+static void about_click_config_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP,   about_scroll_up);
+  window_single_click_subscribe(BUTTON_ID_DOWN, about_scroll_down);
+  window_single_click_subscribe(BUTTON_ID_BACK, about_back_click);
+}
+#endif
+
+// ---- Window lifecycle ----
+
+static void about_window_load(Window *window) {
+  Layer *window_layer = window_get_root_layer(window);
+  GRect  bounds       = layer_get_bounds(window_layer);
+
+#ifdef PBL_ROUND
+  int h_pad = 14;
+#else
+  int h_pad = 4;
+#endif
+  int content_w = bounds.size.w - h_pad * 2;
+  s_about_scroll_layer = scroll_layer_create(GRect(h_pad, STATUS_BAR_LAYER_HEIGHT + 4,
+                                                   content_w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT - 8));
+#ifdef PBL_ROUND
+  window_set_click_config_provider(window, about_click_config_provider);
+#else
+  scroll_layer_set_click_config_onto_window(s_about_scroll_layer, window);
+#endif
+  layer_add_child(window_layer, scroll_layer_get_layer(s_about_scroll_layer));
+
+  s_about_text_layer = text_layer_create(GRect(0, 0, content_w, 2000));
+  text_layer_set_font(s_about_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_text_color(s_about_text_layer, GColorBlack);
+  text_layer_set_background_color(s_about_text_layer, GColorClear);
+  text_layer_set_overflow_mode(s_about_text_layer, GTextOverflowModeWordWrap);
+  text_layer_set_text(s_about_text_layer, STR_ABOUT_TEXT);
+
+  GSize text_size = text_layer_get_content_size(s_about_text_layer);
+  text_layer_set_size(s_about_text_layer, GSize(content_w, text_size.h + 10));
+  scroll_layer_set_content_size(s_about_scroll_layer, GSize(content_w, text_size.h + 20));
+
+  scroll_layer_add_child(s_about_scroll_layer, text_layer_get_layer(s_about_text_layer));
+
+  // Custom status bar — added last so it renders on top
+  s_about_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
+}
+
+static void about_window_unload(Window *window) {
+  text_layer_destroy(s_about_status_bar_layer);
+  s_about_status_bar_layer = NULL;
+  text_layer_destroy(s_about_text_layer);
+  s_about_text_layer = NULL;
+  scroll_layer_destroy(s_about_scroll_layer);
+  s_about_scroll_layer = NULL;
+}
+
+// ---- Public: return handlers for use in init ----
+
+WindowHandlers about_window_get_handlers(void) {
+  return (WindowHandlers){
+    .load   = about_window_load,
+    .unload = about_window_unload,
+  };
+}

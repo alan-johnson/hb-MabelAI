@@ -20,6 +20,18 @@ static void menu_select_callback(int index, void *context) {
   (void)context;
   if (index == 0) {
     send_reminders_request();
+  } else if (index == 3) {
+#ifdef PBL_ROUND
+    window_stack_push(s_about_window, false);
+#else
+    window_stack_push(s_about_window, true);
+#endif
+  } else if (index == 4) {
+#ifdef PBL_ROUND
+    window_stack_push(s_legal_window, false);
+#else
+    window_stack_push(s_legal_window, true);
+#endif
   }
 }
 
@@ -29,11 +41,11 @@ static void menu_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
 
-  s_menu_items[0] = (SimpleMenuItem){ .title = "Reminders", .callback = menu_select_callback };
-  s_menu_items[1] = (SimpleMenuItem){ .title = "Timers",    .callback = menu_select_callback };
-  s_menu_items[2] = (SimpleMenuItem){ .title = "Alarms",    .callback = menu_select_callback };
-  s_menu_items[3] = (SimpleMenuItem){ .title = "About",     .callback = menu_select_callback };
-  s_menu_items[4] = (SimpleMenuItem){ .title = "Legal",     .callback = menu_select_callback };
+  s_menu_items[0] = (SimpleMenuItem){ .title = STR_MENU_ITEM_REMINDERS, .callback = menu_select_callback };
+  s_menu_items[1] = (SimpleMenuItem){ .title = STR_MENU_ITEM_TIMERS,    .callback = menu_select_callback };
+  s_menu_items[2] = (SimpleMenuItem){ .title = STR_MENU_ITEM_ALARMS,    .callback = menu_select_callback };
+  s_menu_items[3] = (SimpleMenuItem){ .title = STR_MENU_ITEM_ABOUT,     .callback = menu_select_callback };
+  s_menu_items[4] = (SimpleMenuItem){ .title = STR_MENU_ITEM_LEGAL,     .callback = menu_select_callback };
 
   s_menu_sections[0] = (SimpleMenuSection){
     .items     = s_menu_items,

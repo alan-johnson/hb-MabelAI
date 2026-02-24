@@ -54,8 +54,6 @@ static void result_down_click_handler(ClickRecognizerRef recognizer, void *conte
 }
 
 static void result_back_click_handler(ClickRecognizerRef recognizer, void *context) {
-  // Remove the confirm window silently so BACK returns to main, not confirm
-  window_stack_remove(s_confirm_window, false);
 #ifdef PBL_ROUND
   window_stack_pop(false);
 #else
