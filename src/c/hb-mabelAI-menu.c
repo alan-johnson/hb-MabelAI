@@ -7,10 +7,21 @@ static SimpleMenuItem    s_menu_items[6];
 
 // ---- Callbacks ----
 
+static void show_send_error(void) {
+  show_response(STR_ERR_SEND);
+#ifdef PBL_ROUND
+  if (window_stack_get_top_window() != s_result_window)
+    window_stack_push(s_result_window, false);
+#else
+  if (window_stack_get_top_window() != s_result_window)
+    window_stack_push(s_result_window, true);
+#endif
+}
+
 static void send_reminders_request(void) {
   DictionaryIterator *iter;
   AppMessageResult result = app_message_outbox_begin(&iter);
-  if (result != APP_MSG_OK) return;
+  if (result != APP_MSG_OK) { show_send_error(); return; }
   int32_t val = 1;
   dict_write_int(iter, KEY_REMINDERS_REQUEST, &val, sizeof(int32_t), true);
   app_message_outbox_send();
@@ -19,7 +30,7 @@ static void send_reminders_request(void) {
 static void send_timers_request(void) {
   DictionaryIterator *iter;
   AppMessageResult result = app_message_outbox_begin(&iter);
-  if (result != APP_MSG_OK) return;
+  if (result != APP_MSG_OK) { show_send_error(); return; }
   int32_t val = 1;
   dict_write_int(iter, KEY_TIMERS_REQUEST, &val, sizeof(int32_t), true);
   app_message_outbox_send();
@@ -28,7 +39,7 @@ static void send_timers_request(void) {
 static void send_alarms_request(void) {
   DictionaryIterator *iter;
   AppMessageResult result = app_message_outbox_begin(&iter);
-  if (result != APP_MSG_OK) return;
+  if (result != APP_MSG_OK) { show_send_error(); return; }
   int32_t val = 1;
   dict_write_int(iter, KEY_ALARMS_REQUEST, &val, sizeof(int32_t), true);
   app_message_outbox_send();
@@ -37,7 +48,7 @@ static void send_alarms_request(void) {
 static void send_weather_request(void) {
   DictionaryIterator *iter;
   AppMessageResult result = app_message_outbox_begin(&iter);
-  if (result != APP_MSG_OK) return;
+  if (result != APP_MSG_OK) { show_send_error(); return; }
   int32_t val = 1;
   dict_write_int(iter, KEY_WEATHER_REQUEST, &val, sizeof(int32_t), true);
   app_message_outbox_send();

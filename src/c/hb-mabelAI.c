@@ -175,10 +175,21 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   }
 }
 
+static void push_result_window(void) {
+  if (window_stack_get_top_window() != s_result_window) {
+#ifdef PBL_ROUND
+    window_stack_push(s_result_window, false);
+#else
+    window_stack_push(s_result_window, true);
+#endif
+  }
+}
+
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
   s_is_loading = false;
   set_status(STR_ERR_MSG_DROPPED);
   show_response(STR_ERR_MSG_DROPPED);
+  push_result_window();
 }
 
 static void outbox_failed_callback(DictionaryIterator *iterator,
@@ -186,6 +197,7 @@ static void outbox_failed_callback(DictionaryIterator *iterator,
   s_is_loading = false;
   set_status(STR_ERR_OUTBOX_FAILED);
   show_response(STR_ERR_OUTBOX_FAILED);
+  push_result_window();
 }
 
 // ---- Init / Deinit ----
