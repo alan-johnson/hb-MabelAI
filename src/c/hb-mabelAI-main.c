@@ -2,7 +2,7 @@
 
 // Uncomment when running in the Pebble emulator (no real microphone).
 // Comment out before deploying to a real watch.
-#define EMULATOR
+//#define EMULATOR
 
 #ifdef EMULATOR
   #define TEST_QUERY_REMINDER "Remind me to take my medication tomorrow at 9am"
