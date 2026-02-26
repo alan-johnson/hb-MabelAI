@@ -19,24 +19,55 @@ Window  *s_timers_window;
 Window  *s_alarms_window;
 
 // ---- Custom status bar shared state ----
-char      s_status_bar_text[32]        = "";
-TextLayer *s_main_status_bar_layer      = NULL;
-TextLayer *s_result_status_bar_layer    = NULL;
-TextLayer *s_text_status_bar_layer      = NULL;
-TextLayer *s_menu_status_bar_layer      = NULL;
-TextLayer *s_reminders_status_bar_layer = NULL;
-TextLayer *s_timers_status_bar_layer    = NULL;
-TextLayer *s_alarms_status_bar_layer    = NULL;
+char   s_status_bar_text[32]    = "";
+Layer *s_main_status_bar_layer      = NULL;
+Layer *s_result_status_bar_layer    = NULL;
+Layer *s_text_status_bar_layer      = NULL;
+Layer *s_menu_status_bar_layer      = NULL;
+Layer *s_reminders_status_bar_layer = NULL;
+Layer *s_timers_status_bar_layer    = NULL;
+Layer *s_alarms_status_bar_layer    = NULL;
 
-TextLayer *create_status_bar(Layer *window_layer, int width) {
-  TextLayer *bar = text_layer_create(GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT));
-  text_layer_set_background_color(bar, GColorBlack);
-  text_layer_set_text_color(bar, GColorWhite);
-  text_layer_set_font(bar, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text_alignment(bar, GTextAlignmentCenter);
-  text_layer_set_overflow_mode(bar, GTextOverflowModeTrailingEllipsis);
-  text_layer_set_text(bar, s_status_bar_text);
-  layer_add_child(window_layer, text_layer_get_layer(bar));
+static void status_bar_update_proc(Layer *layer, GContext *ctx) {
+  GRect bounds = layer_get_bounds(layer);
+
+  // Background
+#ifdef PBL_COLOR
+  graphics_context_set_fill_color(ctx, GColorBrass);
+#else
+  graphics_context_set_fill_color(ctx, GColorBlack);
+#endif
+  graphics_fill_rect(ctx, bounds, 0, GCornerNone);
+
+  // Time + battery text
+#ifdef PBL_COLOR
+  graphics_context_set_text_color(ctx, GColorBlack);
+#else
+  graphics_context_set_text_color(ctx, GColorWhite);
+#endif
+  graphics_draw_text(ctx, s_status_bar_text,
+                     fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
+                     GRect(0, 1, bounds.size.w, bounds.size.h - 2),
+                     GTextOverflowModeTrailingEllipsis,
+                     GTextAlignmentCenter, NULL);
+
+  // Dotted line along the bottom edge (2px on, 2px off)
+#ifdef PBL_COLOR
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+#else
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+#endif
+  int y = bounds.size.h - 1;
+  for (int x = 0; x < bounds.size.w; x += 4) {
+    graphics_draw_pixel(ctx, GPoint(x,     y));
+    graphics_draw_pixel(ctx, GPoint(x + 1, y));
+  }
+}
+
+Layer *create_status_bar(Layer *window_layer, int width) {
+  Layer *bar = layer_create(GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT + 2));
+  layer_set_update_proc(bar, status_bar_update_proc);
+  layer_add_child(window_layer, bar);
   return bar;
 }
 
@@ -54,13 +85,13 @@ void refresh_custom_status_bars(void) {
              "%d:%02d %s | %d%%", hour12, t->tm_min,
              t->tm_hour < 12 ? "AM" : "PM", batt.charge_percent);
   }
-  if (s_main_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_main_status_bar_layer));
-  if (s_result_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_result_status_bar_layer));
-  if (s_text_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_text_status_bar_layer));
-  if (s_menu_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_menu_status_bar_layer));
-  if (s_reminders_status_bar_layer) layer_mark_dirty(text_layer_get_layer(s_reminders_status_bar_layer));
-  if (s_timers_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_timers_status_bar_layer));
-  if (s_alarms_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_alarms_status_bar_layer));
+  if (s_main_status_bar_layer)      layer_mark_dirty(s_main_status_bar_layer);
+  if (s_result_status_bar_layer)    layer_mark_dirty(s_result_status_bar_layer);
+  if (s_text_status_bar_layer)      layer_mark_dirty(s_text_status_bar_layer);
+  if (s_menu_status_bar_layer)      layer_mark_dirty(s_menu_status_bar_layer);
+  if (s_reminders_status_bar_layer) layer_mark_dirty(s_reminders_status_bar_layer);
+  if (s_timers_status_bar_layer)    layer_mark_dirty(s_timers_status_bar_layer);
+  if (s_alarms_status_bar_layer)    layer_mark_dirty(s_alarms_status_bar_layer);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {

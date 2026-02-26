@@ -38,10 +38,10 @@
 
 // ---- About window ----
 #define STR_ABOUT_TEXT \
-  "Mabel AI\n\n" \
-  "Version 1.0\n\n" \
+  "Mabel AI\n" \
+  "Version 1.0\n" \
   "Your AI assistant on your wrist.\n\n" \
-  "Inspired by Bobby by Katherine Berry and Snowy by Mathew Reiss. We are grateful for their ingenuity and dedication to bringing AI to Pebble devices, which paved the way for Mabel AI.\n\n" \
+  "With thanks to Katherine Berry's Bobby and Mathew Reiss's Snowy for inspiration. We are grateful for their ingenuity and dedication to bringing AI to Pebble devices, which paved the way for Mabel AI.\n\n" \
   "Mabel AI is developed by handsbreadth LLC™, a small independent software company."
 
 // ---- Legal window ----

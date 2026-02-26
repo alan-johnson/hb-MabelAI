@@ -186,6 +186,12 @@ static GPathInfo s_bubble_path_info = { .num_points = 15, .points = s_bubble_pts
 static void bubble_update_proc(Layer *layer, GContext *ctx) {
   if (!s_bubble_path) return;
 
+#ifdef PBL_COLOR
+  // Brass background behind bubble on color watches
+  graphics_context_set_fill_color(ctx, GColorBrass);
+  graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+#endif
+
   // White interior fill
   graphics_context_set_fill_color(ctx, GColorWhite);
   gpath_draw_filled(ctx, s_bubble_path);
@@ -275,14 +281,16 @@ static void main_window_load(Window *window) {
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
   bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
-  bitmap_layer_set_background_color(s_splash_layer, GColorWhite);
+  #ifdef PBL_COLOR
+    bitmap_layer_set_background_color(s_splash_layer, GColorBrass);
+  #else
+    bitmap_layer_set_background_color(s_splash_layer, GColorWhite);
+  #endif
   layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
 
-  // Action bar added after content layers so it renders on top of the splash image
-  action_bar_layer_add_to_window(s_main_action_bar, window);
-
-  // Custom status bar — added last so it renders on top of the action bar
+  // Status bar added before action bar — action bar renders on top in the overlap corner
   s_main_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
+  action_bar_layer_add_to_window(s_main_action_bar, window);
 }
 
 static void main_window_unload(Window *window) {
@@ -296,7 +304,7 @@ static void main_window_unload(Window *window) {
     s_dictation_session = NULL;
   }
 #endif
-  text_layer_destroy(s_main_status_bar_layer);
+  layer_destroy(s_main_status_bar_layer);
   s_main_status_bar_layer = NULL;
   layer_destroy(s_bubble_layer);
   s_bubble_layer = NULL;

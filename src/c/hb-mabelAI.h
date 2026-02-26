@@ -31,20 +31,20 @@ extern Window  *s_timers_window;
 extern Window  *s_alarms_window;
 
 // ---- Shared custom status bar ----
-// Shared text buffer — all windows' status TextLayers point to this.
-extern char      s_status_bar_text[32];
-// Each window's status TextLayer — set in _load, cleared in _unload.
-extern TextLayer *s_main_status_bar_layer;
-extern TextLayer *s_result_status_bar_layer;
-extern TextLayer *s_text_status_bar_layer;
-extern TextLayer *s_menu_status_bar_layer;
-extern TextLayer *s_reminders_status_bar_layer;
-extern TextLayer *s_timers_status_bar_layer;
-extern TextLayer *s_alarms_status_bar_layer;
+// Shared text buffer — all windows' status bar layers read from this.
+extern char   s_status_bar_text[32];
+// Each window's status bar Layer — set in _load, cleared in _unload.
+extern Layer *s_main_status_bar_layer;
+extern Layer *s_result_status_bar_layer;
+extern Layer *s_text_status_bar_layer;
+extern Layer *s_menu_status_bar_layer;
+extern Layer *s_reminders_status_bar_layer;
+extern Layer *s_timers_status_bar_layer;
+extern Layer *s_alarms_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
-// Creates a full-width status bar TextLayer, adds it to window_layer, and returns it.
-TextLayer *create_status_bar(Layer *window_layer, int width);
+// Creates a full-width status bar Layer (with dotted bottom line), adds it to window_layer, and returns it.
+Layer *create_status_bar(Layer *window_layer, int width);
 
 // ---- API provided by hb-mabelAI-main.c ----
 // Updates the prompt/status text in the bottom half of the main window.

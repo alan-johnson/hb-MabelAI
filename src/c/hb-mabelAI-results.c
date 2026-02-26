@@ -75,7 +75,6 @@ static void result_window_load(Window *window) {
 
   // Action bar — up/down scroll
   s_result_action_bar = action_bar_layer_create();
-  action_bar_layer_add_to_window(s_result_action_bar, window);
   action_bar_layer_set_click_config_provider(s_result_action_bar, result_click_config_provider);
   action_bar_layer_set_icon(s_result_action_bar, BUTTON_ID_UP,   s_icon_up);
   action_bar_layer_set_icon(s_result_action_bar, BUTTON_ID_DOWN, s_icon_down);
@@ -138,12 +137,13 @@ static void result_window_load(Window *window) {
   // Populate layers from the shared buffers
   refresh_result_layers();
 
-  // Custom status bar — added last so it renders on top of the action bar
+  // Status bar added before action bar — action bar renders on top in the overlap corner
   s_result_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
+  action_bar_layer_add_to_window(s_result_action_bar, window);
 }
 
 static void result_window_unload(Window *window) {
-  text_layer_destroy(s_result_status_bar_layer);
+  layer_destroy(s_result_status_bar_layer);
   s_result_status_bar_layer = NULL;
   text_layer_destroy(s_request_label);
   s_request_label = NULL;

@@ -59,7 +59,6 @@ static void timers_window_load(Window *window) {
   GRect  bounds       = layer_get_bounds(window_layer);
 
   s_timers_action_bar = action_bar_layer_create();
-  action_bar_layer_add_to_window(s_timers_action_bar, window);
   action_bar_layer_set_click_config_provider(s_timers_action_bar, timers_click_config_provider);
   action_bar_layer_set_icon(s_timers_action_bar, BUTTON_ID_UP,   s_icon_up);
   action_bar_layer_set_icon(s_timers_action_bar, BUTTON_ID_DOWN, s_icon_down);
@@ -97,10 +96,11 @@ static void timers_window_load(Window *window) {
   refresh_timers_layers();
 
   s_timers_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
+  action_bar_layer_add_to_window(s_timers_action_bar, window);
 }
 
 static void timers_window_unload(Window *window) {
-  text_layer_destroy(s_timers_status_bar_layer);
+  layer_destroy(s_timers_status_bar_layer);
   s_timers_status_bar_layer = NULL;
   text_layer_destroy(s_timers_label);
   s_timers_label = NULL;

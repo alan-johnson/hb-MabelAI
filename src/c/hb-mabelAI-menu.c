@@ -87,7 +87,7 @@ static void menu_window_load(Window *window) {
 }
 
 static void menu_window_unload(Window *window) {
-  text_layer_destroy(s_menu_status_bar_layer);
+  layer_destroy(s_menu_status_bar_layer);
   s_menu_status_bar_layer = NULL;
   simple_menu_layer_destroy(s_menu_layer);
   s_menu_layer = NULL;

@@ -76,7 +76,7 @@ static void text_window_load(Window *window) {
 }
 
 static void text_window_unload(Window *window) {
-  text_layer_destroy(s_text_status_bar_layer);
+  layer_destroy(s_text_status_bar_layer);
   s_text_status_bar_layer = NULL;
   text_layer_destroy(s_text_layer);
   s_text_layer = NULL;
