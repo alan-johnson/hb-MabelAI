@@ -29,10 +29,15 @@
 // ---- Alarms window ----
 #define STR_SECTION_ALARMS     "alarms"
 
+// ---- Weather window ----
+#define STR_SECTION_WEATHER    "weather"
+#define STR_WEATHER_LOADING    "Getting weather..."
+
 // ---- Menu window ----
 #define STR_MENU_ITEM_REMINDERS  "Reminders"
 #define STR_MENU_ITEM_TIMERS     "Timers"
 #define STR_MENU_ITEM_ALARMS     "Alarms"
+#define STR_MENU_ITEM_WEATHER    "Weather"
 #define STR_MENU_ITEM_ABOUT      "About"
 #define STR_MENU_ITEM_LEGAL      "Legal"
 

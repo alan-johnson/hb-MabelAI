@@ -12,6 +12,8 @@
 #define KEY_TIMERS_LIST       6
 #define KEY_ALARMS_REQUEST    7
 #define KEY_ALARMS_LIST       8
+#define KEY_WEATHER_REQUEST   9
+#define KEY_WEATHER_DATA      10
 
 // ---- Shared state (defined in hb-mabelAI.c) ----
 extern char    s_response_buffer[1804];
@@ -29,6 +31,7 @@ extern Window  *s_menu_window;
 extern Window  *s_reminders_window;
 extern Window  *s_timers_window;
 extern Window  *s_alarms_window;
+extern Window  *s_weather_window;
 
 // ---- Shared custom status bar ----
 // Shared text buffer — all windows' status bar layers read from this.
@@ -41,6 +44,7 @@ extern Layer *s_menu_status_bar_layer;
 extern Layer *s_reminders_status_bar_layer;
 extern Layer *s_timers_status_bar_layer;
 extern Layer *s_alarms_status_bar_layer;
+extern Layer *s_weather_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
 // Creates a full-width status bar Layer (with dotted bottom line), adds it to window_layer, and returns it.
@@ -81,3 +85,7 @@ WindowHandlers timers_window_get_handlers(void);
 // ---- API provided by hb-mabelAI-alarms.c ----
 void show_alarms(const char *text);
 WindowHandlers alarms_window_get_handlers(void);
+
+// ---- API provided by hb-mabelAI-weather.c ----
+void show_weather(const char *text);
+WindowHandlers weather_window_get_handlers(void);

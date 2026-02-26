@@ -34,7 +34,9 @@
       "KEY_TIMERS_REQUEST":    5,
       "KEY_TIMERS_LIST":       6,
       "KEY_ALARMS_REQUEST":    7,
-      "KEY_ALARMS_LIST":       8
+      "KEY_ALARMS_LIST":       8,
+      "KEY_WEATHER_REQUEST":   9,
+      "KEY_WEATHER_DATA":      10
     },
     "resources": {
       "media": [

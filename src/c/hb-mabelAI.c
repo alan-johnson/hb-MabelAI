@@ -17,6 +17,7 @@ Window  *s_menu_window;
 Window  *s_reminders_window;
 Window  *s_timers_window;
 Window  *s_alarms_window;
+Window  *s_weather_window;
 
 // ---- Custom status bar shared state ----
 char   s_status_bar_text[32]    = "";
@@ -27,6 +28,7 @@ Layer *s_menu_status_bar_layer      = NULL;
 Layer *s_reminders_status_bar_layer = NULL;
 Layer *s_timers_status_bar_layer    = NULL;
 Layer *s_alarms_status_bar_layer    = NULL;
+Layer *s_weather_status_bar_layer   = NULL;
 
 static void status_bar_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
@@ -92,6 +94,7 @@ void refresh_custom_status_bars(void) {
   if (s_reminders_status_bar_layer) layer_mark_dirty(s_reminders_status_bar_layer);
   if (s_timers_status_bar_layer)    layer_mark_dirty(s_timers_status_bar_layer);
   if (s_alarms_status_bar_layer)    layer_mark_dirty(s_alarms_status_bar_layer);
+  if (s_weather_status_bar_layer)   layer_mark_dirty(s_weather_status_bar_layer);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
@@ -112,6 +115,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *reminders_t  = dict_find(iterator, KEY_REMINDERS_LIST);
   Tuple *timers_t     = dict_find(iterator, KEY_TIMERS_LIST);
   Tuple *alarms_t     = dict_find(iterator, KEY_ALARMS_LIST);
+  Tuple *weather_t    = dict_find(iterator, KEY_WEATHER_DATA);
 
   if (response_t) {
     show_response(response_t->value->cstring);
@@ -156,6 +160,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       window_stack_push(s_alarms_window, false);
 #else
       window_stack_push(s_alarms_window, true);
+#endif
+    }
+  }
+  if (weather_t) {
+    show_weather(weather_t->value->cstring);
+    if (window_stack_get_top_window() != s_weather_window) {
+#ifdef PBL_ROUND
+      window_stack_push(s_weather_window, false);
+#else
+      window_stack_push(s_weather_window, true);
 #endif
     }
   }
@@ -216,6 +230,9 @@ static void init(void) {
   s_alarms_window = window_create();
   window_set_window_handlers(s_alarms_window, alarms_window_get_handlers());
 
+  s_weather_window = window_create();
+  window_set_window_handlers(s_weather_window, weather_window_get_handlers());
+
 #ifdef PBL_ROUND
   window_stack_push(s_main_window, false);
 #else
@@ -233,6 +250,7 @@ static void deinit(void) {
   window_destroy(s_reminders_window);
   window_destroy(s_timers_window);
   window_destroy(s_alarms_window);
+  window_destroy(s_weather_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);
