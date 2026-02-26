@@ -41,7 +41,7 @@
   "Mabel AI\n\n" \
   "Version 1.0\n\n" \
   "Your AI assistant on your wrist.\n\n" \
-  "Inspired by Bobby by Katherine Berry and Snowy by Mathew Reiss. We are grateful for their ingenuity and dedication to bringing AI to Pebble devices, which paved the way for Mabel.\n\n" \
+  "Inspired by Bobby by Katherine Berry and Snowy by Mathew Reiss. We are grateful for their ingenuity and dedication to bringing AI to Pebble devices, which paved the way for Mabel AI.\n\n" \
   "Mabel AI is developed by handsbreadth LLC™, a small independent software company."
 
 // ---- Legal window ----
@@ -51,7 +51,7 @@
   "While efforts are made for accuracy, AI-generated content \n" \
   "is for informational purposes only and \n" \
   "should not be relied upon without independent verification. \n" \
-  "handsbreadth LLC assumes no responsibility for errors, omissions, or inaccuracies in the content."
+  "handsbreadth LLC™ assumes no responsibility for errors, omissions, or inaccuracies in the content."
 
 // ---- Help window ----
 #define STR_HELP_TEXT \
