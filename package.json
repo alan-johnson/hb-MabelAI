@@ -30,7 +30,11 @@
       "KEY_RESPONSE":          1,
       "KEY_STATUS":            2,
       "KEY_REMINDERS_REQUEST": 3,
-      "KEY_REMINDERS_LIST":    4
+      "KEY_REMINDERS_LIST":    4,
+      "KEY_TIMERS_REQUEST":    5,
+      "KEY_TIMERS_LIST":       6,
+      "KEY_ALARMS_REQUEST":    7,
+      "KEY_ALARMS_LIST":       8
     },
     "resources": {
       "media": [

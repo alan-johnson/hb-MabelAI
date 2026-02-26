@@ -23,6 +23,12 @@
 #define STR_SECTION_REMINDERS  "reminders"
 #define STR_NO_REMINDERS       "No reminders yet.\n\nAsk Mabel to set one!"
 
+// ---- Timers window ----
+#define STR_SECTION_TIMERS     "timers"
+
+// ---- Alarms window ----
+#define STR_SECTION_ALARMS     "alarms"
+
 // ---- Menu window ----
 #define STR_MENU_ITEM_REMINDERS  "Reminders"
 #define STR_MENU_ITEM_TIMERS     "Timers"

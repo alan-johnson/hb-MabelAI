@@ -5,7 +5,9 @@
 #define EMULATOR
 
 #ifdef EMULATOR
-  #define TEST_QUERY "Remind me to take my medication tomorrow at 9am"
+  #define TEST_QUERY_REMINDER "Remind me to take my medication tomorrow at 9am"
+  #define TEST_QUERY_TIMER    "Set a timer for 10 minutes"
+  #define TEST_QUERY_ALARM    "Set an alarm for 7am tomorrow"
 #endif
 
 // ---- Private layer state ----
@@ -121,7 +123,14 @@ static void start_dictation(void) {
 
 static void main_select_click_handler(ClickRecognizerRef recognizer, void *context) {
 #if defined(EMULATOR)
-  // Emulator has no real mic — route through confirm window for full round-trip testing
+  // Emulator has no real mic — cycle through test queries for full round-trip testing.
+  // Press SELECT repeatedly to test: reminder → timer → alarm → repeat.
+  static uint8_t s_test_index = 0;
+  static const char *s_test_queries[] = {
+    TEST_QUERY_REMINDER,
+    TEST_QUERY_TIMER,
+    TEST_QUERY_ALARM,
+  };
   if (s_is_loading) return;
   if (!connection_service_peek_pebble_app_connection()) {
     set_status(STR_STATUS_NO_PHONE);
@@ -135,7 +144,8 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
     window_stack_push(s_result_window, true);
 #endif
   }
-  send_query(TEST_QUERY);
+  send_query(s_test_queries[s_test_index % 3]);
+  s_test_index++;
 #elif defined(PBL_MICROPHONE)
   start_dictation();
 #else
@@ -265,7 +275,7 @@ static void main_window_load(Window *window) {
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
   bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
-  bitmap_layer_set_background_color(s_splash_layer, GColorDarkGray);
+  bitmap_layer_set_background_color(s_splash_layer, GColorWhite);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
 
   // Action bar added after content layers so it renders on top of the splash image

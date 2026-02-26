@@ -16,10 +16,32 @@ static void send_reminders_request(void) {
   app_message_outbox_send();
 }
 
+static void send_timers_request(void) {
+  DictionaryIterator *iter;
+  AppMessageResult result = app_message_outbox_begin(&iter);
+  if (result != APP_MSG_OK) return;
+  int32_t val = 1;
+  dict_write_int(iter, KEY_TIMERS_REQUEST, &val, sizeof(int32_t), true);
+  app_message_outbox_send();
+}
+
+static void send_alarms_request(void) {
+  DictionaryIterator *iter;
+  AppMessageResult result = app_message_outbox_begin(&iter);
+  if (result != APP_MSG_OK) return;
+  int32_t val = 1;
+  dict_write_int(iter, KEY_ALARMS_REQUEST, &val, sizeof(int32_t), true);
+  app_message_outbox_send();
+}
+
 static void menu_select_callback(int index, void *context) {
   (void)context;
   if (index == 0) {
     send_reminders_request();
+  } else if (index == 1) {
+    send_timers_request();
+  } else if (index == 2) {
+    send_alarms_request();
   } else if (index == 3) {
     window_set_user_data(s_text_window, (void *)STR_ABOUT_TEXT);
 #ifdef PBL_ROUND

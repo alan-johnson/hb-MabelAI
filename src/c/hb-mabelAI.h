@@ -8,6 +8,10 @@
 #define KEY_STATUS            2
 #define KEY_REMINDERS_REQUEST 3
 #define KEY_REMINDERS_LIST    4
+#define KEY_TIMERS_REQUEST    5
+#define KEY_TIMERS_LIST       6
+#define KEY_ALARMS_REQUEST    7
+#define KEY_ALARMS_LIST       8
 
 // ---- Shared state (defined in hb-mabelAI.c) ----
 extern char    s_response_buffer[1804];
@@ -23,6 +27,8 @@ extern Window  *s_result_window;
 extern Window  *s_text_window;
 extern Window  *s_menu_window;
 extern Window  *s_reminders_window;
+extern Window  *s_timers_window;
+extern Window  *s_alarms_window;
 
 // ---- Shared custom status bar ----
 // Shared text buffer — all windows' status TextLayers point to this.
@@ -33,6 +39,8 @@ extern TextLayer *s_result_status_bar_layer;
 extern TextLayer *s_text_status_bar_layer;
 extern TextLayer *s_menu_status_bar_layer;
 extern TextLayer *s_reminders_status_bar_layer;
+extern TextLayer *s_timers_status_bar_layer;
+extern TextLayer *s_alarms_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
 // Creates a full-width status bar TextLayer, adds it to window_layer, and returns it.
@@ -65,3 +73,11 @@ WindowHandlers menu_window_get_handlers(void);
 void show_reminders(const char *text);
 // Returns the WindowHandlers struct for the reminders window.
 WindowHandlers reminders_window_get_handlers(void);
+
+// ---- API provided by hb-mabelAI-timers.c ----
+void show_timers(const char *text);
+WindowHandlers timers_window_get_handlers(void);
+
+// ---- API provided by hb-mabelAI-alarms.c ----
+void show_alarms(const char *text);
+WindowHandlers alarms_window_get_handlers(void);

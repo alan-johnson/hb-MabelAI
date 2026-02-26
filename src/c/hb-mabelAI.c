@@ -15,6 +15,8 @@ Window  *s_result_window;
 Window  *s_text_window;
 Window  *s_menu_window;
 Window  *s_reminders_window;
+Window  *s_timers_window;
+Window  *s_alarms_window;
 
 // ---- Custom status bar shared state ----
 char      s_status_bar_text[32]        = "";
@@ -23,6 +25,8 @@ TextLayer *s_result_status_bar_layer    = NULL;
 TextLayer *s_text_status_bar_layer      = NULL;
 TextLayer *s_menu_status_bar_layer      = NULL;
 TextLayer *s_reminders_status_bar_layer = NULL;
+TextLayer *s_timers_status_bar_layer    = NULL;
+TextLayer *s_alarms_status_bar_layer    = NULL;
 
 TextLayer *create_status_bar(Layer *window_layer, int width) {
   TextLayer *bar = text_layer_create(GRect(0, 0, width, STATUS_BAR_LAYER_HEIGHT));
@@ -55,6 +59,8 @@ void refresh_custom_status_bars(void) {
   if (s_text_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_text_status_bar_layer));
   if (s_menu_status_bar_layer)      layer_mark_dirty(text_layer_get_layer(s_menu_status_bar_layer));
   if (s_reminders_status_bar_layer) layer_mark_dirty(text_layer_get_layer(s_reminders_status_bar_layer));
+  if (s_timers_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_timers_status_bar_layer));
+  if (s_alarms_status_bar_layer)    layer_mark_dirty(text_layer_get_layer(s_alarms_status_bar_layer));
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
@@ -73,6 +79,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *response_t   = dict_find(iterator, KEY_RESPONSE);
   Tuple *status_t     = dict_find(iterator, KEY_STATUS);
   Tuple *reminders_t  = dict_find(iterator, KEY_REMINDERS_LIST);
+  Tuple *timers_t     = dict_find(iterator, KEY_TIMERS_LIST);
+  Tuple *alarms_t     = dict_find(iterator, KEY_ALARMS_LIST);
 
   if (response_t) {
     show_response(response_t->value->cstring);
@@ -97,6 +105,26 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       window_stack_push(s_reminders_window, false);
 #else
       window_stack_push(s_reminders_window, true);
+#endif
+    }
+  }
+  if (timers_t) {
+    show_timers(timers_t->value->cstring);
+    if (window_stack_get_top_window() != s_timers_window) {
+#ifdef PBL_ROUND
+      window_stack_push(s_timers_window, false);
+#else
+      window_stack_push(s_timers_window, true);
+#endif
+    }
+  }
+  if (alarms_t) {
+    show_alarms(alarms_t->value->cstring);
+    if (window_stack_get_top_window() != s_alarms_window) {
+#ifdef PBL_ROUND
+      window_stack_push(s_alarms_window, false);
+#else
+      window_stack_push(s_alarms_window, true);
 #endif
     }
   }
@@ -151,6 +179,12 @@ static void init(void) {
   s_reminders_window = window_create();
   window_set_window_handlers(s_reminders_window, reminders_window_get_handlers());
 
+  s_timers_window = window_create();
+  window_set_window_handlers(s_timers_window, timers_window_get_handlers());
+
+  s_alarms_window = window_create();
+  window_set_window_handlers(s_alarms_window, alarms_window_get_handlers());
+
 #ifdef PBL_ROUND
   window_stack_push(s_main_window, false);
 #else
@@ -166,6 +200,8 @@ static void deinit(void) {
   window_destroy(s_text_window);
   window_destroy(s_menu_window);
   window_destroy(s_reminders_window);
+  window_destroy(s_timers_window);
+  window_destroy(s_alarms_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);
