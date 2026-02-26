@@ -311,13 +311,33 @@ function degreesToCompass(deg) {
   return dirs[Math.round(deg / 45) % 8];
 }
 
+// Returns true for IANA timezones where Fahrenheit is the standard unit.
+// Prefix matching covers sub-zones (e.g. America/Indiana/Indianapolis).
+function useFahrenheitForTimezone(tz) {
+  var zones = [
+    'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+    'America/Phoenix', 'America/Anchorage', 'America/Adak', 'America/Detroit',
+    'America/Boise', 'America/Juneau', 'America/Sitka', 'America/Metlakatla',
+    'America/Yakutat', 'America/Nome', 'America/Menominee',
+    'America/Indiana', 'America/Kentucky', 'America/North_Dakota',
+    'Pacific/Honolulu', 'America/Puerto_Rico', 'Pacific/Guam', 'Pacific/Saipan',
+    'Pacific/Pago_Pago', 'America/Nassau', 'America/Cayman', 'America/Belize',
+    'Africa/Monrovia', 'Pacific/Palau', 'Pacific/Majuro', 'Pacific/Pohnpei',
+    'Pacific/Chuuk', 'Pacific/Kosrae'
+  ];
+  for (var i = 0; i < zones.length; i++) {
+    if (tz.indexOf(zones[i]) === 0) return true;
+  }
+  return false;
+}
+
 function fetchWeather() {
   navigator.geolocation.getCurrentPosition(
     function(pos) {
       var lat = pos.coords.latitude.toFixed(4);
       var lon = pos.coords.longitude.toFixed(4);
-      // Use Fahrenheit for en-US locale, Celsius everywhere else.
-      var useFahrenheit = (navigator.language || '').indexOf('en-US') === 0;
+      var tz  = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      var useFahrenheit = useFahrenheitForTimezone(tz);
       var tempUnit = useFahrenheit ? 'fahrenheit' : 'celsius';
       var tempSym  = useFahrenheit ? 'F' : 'C';
       var url =
