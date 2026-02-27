@@ -10,7 +10,7 @@ Mabel is an AI assistant for your Pebble smartwatch. Ask questions, get answers,
 |------|-------|
 | Pebble smartwatch | Pebble Time, Pebble Time Round, or Pebble 2 Duo. Will support the Pebble Time 2 Round and Pebble Time 2 when release.|
 | iPhone or Android phone | With Bluetooth |
-| Rebble app + subscription | Free app; ~$3/month subscription required for voice |
+| Pebble app + subscription | Free app; ~$3/month subscription required for voice |
 | AI API key | At least one provider (Gemini has a free tier — see below) |
 
 ---
@@ -30,7 +30,7 @@ Rebble is the community-run replacement for Pebble's servers. You need it to con
 
 ## Step 2 — Install Mabel
 
-1. Open the Rebble app on your phone.
+1. Open the Pebble app on your phone.
 2. Go to the **App Store** tab and search for **"hb Mabel AI"**.
 3. Tap **Install** — the app will appear on your watch within a few seconds.
 
@@ -69,8 +69,8 @@ Gemini's free tier is generous and sufficient for typical watch use.
 
 ## Step 4 — Configure Mabel
 
-1. On your phone, open the Rebble app.
-2. Go to **My Pebble** → **Apps** → find **hb Mabel AI** → tap the **settings gear**.
+1. On your phone, open the Pebble app.
+2. Go to **Apps** → find **hb Mabel AI** → tap the **settings gear**.
 3. Choose your **AI Provider** (Gemini, Claude, or ChatGPT).
 4. Paste your **API key** into the corresponding field.
 5. Tap **Save** — your watch will confirm "Settings saved!"
@@ -79,7 +79,7 @@ Gemini's free tier is generous and sufficient for typical watch use.
 
 ## Step 5 — Ask Your First Question
 
-1. On your watch, open the **Mabel** app.
+1. On your watch, open the **hb Mabel AI** app.
 2. Click the **middle button (MIC)** to start listening.
 3. Speak your question clearly then click the **SELECT** button when done. Wait a moment for the dictation to complete.
 4. Review the transcription on screen.
@@ -105,7 +105,7 @@ Mabel will confirm the reminder and create a pin in your Pebble timeline. The re
 
 ## Step 7 — View Your Reminders
 
-1. From the Mabel main screen, press the **bottom button (MENU)**.
+1. From the hb Mabel AI main screen, press the **bottom button (MENU)**.
 2. Select **Reminders**.
 3. Your upcoming reminders are listed in chronological order.
 4. Use **UP/DOWN** to scroll. Press **BACK** to return.
@@ -185,10 +185,10 @@ This is handy for keeping an eye on API costs, especially on paid tiers.
 You haven't entered an API key yet, or the wrong provider is selected. Go to Step 4.
 
 **Dictation fails or never completes**
-Your Rebble subscription may have lapsed, or your phone's Bluetooth connection dropped. Check that the Rebble app is running in the background and your subscription is active.
+Your Rebble subscription may have lapsed, or your phone's Bluetooth connection dropped. Check that the Pebble app is running in the background and your subscription is active.
 
 **"Phone not connected. Open the Pebble app."**
-The Rebble app is not running or Bluetooth is off. Open the Rebble app on your phone and make sure Bluetooth is enabled.
+The Pebble app is not running or Bluetooth is off. Open the Pebble app on your phone and make sure Bluetooth is enabled.
 
 **"API error 401"**
 Your API key is invalid or has been revoked. Generate a new key and re-enter it in settings.
