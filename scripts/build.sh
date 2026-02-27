@@ -33,15 +33,29 @@ gen_env() {
 build() {
   echo "  → Building..."
   pebble build
-  strip_sourcemap
 }
 
 # Remove the source map from the .pbw (debug-only artifact; saves ~52 KB).
+# Uses Python's zipfile to rewrite the archive atomically — avoids the race
+# where pebble's bundler finalises the .pbw after `pebble build` returns.
 strip_sourcemap() {
   local pbw="build/hb-MabelAI.pbw"
-  if [ ! -f "$pbw" ]; then return; fi
-  if unzip -l "$pbw" 2>/dev/null | grep -q "pebble-js-app.js.map"; then
-    zip -q -d "$pbw" pebble-js-app.js.map
+  [ -f "$pbw" ] || return 0
+  if python3 - "$pbw" << 'PYEOF'
+import sys, zipfile, os
+MAP = 'pebble-js-app.js.map'
+pbw = sys.argv[1]
+with zipfile.ZipFile(pbw) as src:
+    if MAP not in src.namelist():
+        sys.exit(1)          # nothing to strip — signal caller via exit code
+    tmp = pbw + '.tmp'
+    with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as dst:
+        for item in src.infolist():
+            if item.filename != MAP:
+                dst.writestr(item, src.read(item.filename))
+os.replace(tmp, pbw)         # atomic swap
+PYEOF
+  then
     echo "  → Source map stripped"
   fi
 }
@@ -98,8 +112,8 @@ case "$MODE" in
     gen_env
     build
     minify_js
-    # Strip the source map last — pebble's bundler can finalize the .pbw
-    # after `pebble build` returns, so stripping inside build() may be too early.
+    # Flush any pending writes from pebble's bundler subprocess, then strip.
+    sync
     strip_sourcemap
     echo ""
     echo "Done.  Upload to the Rebble store:"
