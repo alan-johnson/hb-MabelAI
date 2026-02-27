@@ -98,9 +98,12 @@ case "$MODE" in
     gen_env
     build
     minify_js
+    # Strip the source map last — pebble's bundler can finalize the .pbw
+    # after `pebble build` returns, so stripping inside build() may be too early.
+    strip_sourcemap
     echo ""
     echo "Done.  Upload to the Rebble store:"
-    echo "  build/hb-mabel-ai.pbw"
+    echo "  build/hb-MabelAI.pbw"
     ;;
 
   emulator|emu)

@@ -66,6 +66,7 @@ void set_status(const char *msg) {
 // ---- Query dispatch ----
 
 void send_query(const char *query) {
+  snprintf(s_query_buffer, sizeof(s_query_buffer), "%s", query);
   start_thinking_animation();
   s_is_loading = true;
   DictionaryIterator *out_iter;
