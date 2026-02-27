@@ -60,7 +60,7 @@ static void text_window_load(Window *window) {
 
   s_text_layer = text_layer_create(GRect(0, 0, content_w, 2000));
   text_layer_set_font(s_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_color(s_text_layer, GColorBlack);
+  text_layer_set_text_color(s_text_layer, COLOR_TEXT);
   text_layer_set_background_color(s_text_layer, GColorClear);
   text_layer_set_overflow_mode(s_text_layer, GTextOverflowModeWordWrap);
   text_layer_set_text(s_text_layer, text);

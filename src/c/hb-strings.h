@@ -1,4 +1,5 @@
 #pragma once
+#include "hb-version.h"  // auto-generated from package.json by `npm run gen-env`
 // hb-strings.h — all user-visible strings in one place for easy localization.
 // To translate, replace the values below and rebuild.
 
@@ -33,20 +34,26 @@
 #define STR_SECTION_WEATHER    "weather"
 #define STR_WEATHER_LOADING    "Getting weather..."
 
+// ---- Tokens window ----
+#define STR_SECTION_TOKENS     "tokens"
+#define STR_TOKENS_LOADING     "Loading..."
+
 // ---- Menu window ----
 #define STR_MENU_ITEM_REMINDERS  "Reminders"
 #define STR_MENU_ITEM_TIMERS     "Timers"
 #define STR_MENU_ITEM_ALARMS     "Alarms"
 #define STR_MENU_ITEM_WEATHER    "Weather"
+#define STR_MENU_ITEM_TOKENS     "Tokens"
 #define STR_MENU_ITEM_ABOUT      "About"
 #define STR_MENU_ITEM_LEGAL      "Legal"
 
 // ---- About window ----
 #define STR_ABOUT_TEXT \
   "Mabel AI\n" \
-  "Version 1.0\n" \
+  "Version " APP_VERSION "\n" \
   "Your AI assistant on your wrist.\n\n" \
   "With thanks to Katherine Berry's Bobby and Mathew Reiss's Snowy for inspiration. We are grateful for their ingenuity and dedication to bringing AI to Pebble devices, which paved the way for Mabel AI.\n\n" \
+  "Weather courtesy of Open-Meteo (api.open-meteo.com).\n\n" \
   "Mabel AI is developed by handsbreadth LLC™, a small independent software company."
 
 // ---- Legal window ----

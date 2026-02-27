@@ -6,9 +6,9 @@
 module.exports = {
   PROVIDER: 'claude',
   CLAUDE_API_KEY: 'REDACTED_API_KEY',
-  GEMINI_API_KEY: '',
+  GEMINI_API_KEY: 'REDACTED_API_KEY',
   CHATGPT_API_KEY: '',
   MODEL: 'claude-haiku-4-5-20251001',
-  MAX_TOKENS: 0,
-  MAX_HISTORY: -1
+  MAX_TOKENS: 300,
+  MAX_HISTORY: 4
 };

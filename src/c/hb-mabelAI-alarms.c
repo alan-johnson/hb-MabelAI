@@ -77,7 +77,7 @@ static void alarms_window_load(Window *window) {
   s_alarms_label = text_layer_create(
       GRect(h_pad, STATUS_BAR_LAYER_HEIGHT + 2, text_w, label_h));
   text_layer_set_font(s_alarms_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text_color(s_alarms_label, GColorDarkGray);
+  text_layer_set_text_color(s_alarms_label, COLOR_TEXT_LABEL);
   text_layer_set_background_color(s_alarms_label, GColorClear);
   text_layer_set_text(s_alarms_label, STR_SECTION_ALARMS);
   layer_add_child(window_layer, text_layer_get_layer(s_alarms_label));
@@ -88,7 +88,7 @@ static void alarms_window_load(Window *window) {
 
   s_alarms_layer = text_layer_create(GRect(0, 0, text_w, 2000));
   text_layer_set_font(s_alarms_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_color(s_alarms_layer, GColorBlack);
+  text_layer_set_text_color(s_alarms_layer, COLOR_TEXT);
   text_layer_set_background_color(s_alarms_layer, GColorClear);
   text_layer_set_overflow_mode(s_alarms_layer, GTextOverflowModeWordWrap);
   scroll_layer_add_child(s_scroll_layer, text_layer_get_layer(s_alarms_layer));

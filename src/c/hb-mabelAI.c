@@ -18,6 +18,7 @@ Window  *s_reminders_window;
 Window  *s_timers_window;
 Window  *s_alarms_window;
 Window  *s_weather_window;
+Window  *s_tokens_window;
 
 // ---- Custom status bar shared state ----
 char   s_status_bar_text[32]    = "";
@@ -29,24 +30,17 @@ Layer *s_reminders_status_bar_layer = NULL;
 Layer *s_timers_status_bar_layer    = NULL;
 Layer *s_alarms_status_bar_layer    = NULL;
 Layer *s_weather_status_bar_layer   = NULL;
+Layer *s_tokens_status_bar_layer    = NULL;
 
 static void status_bar_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
 
   // Background
-#ifdef PBL_COLOR
-  graphics_context_set_fill_color(ctx, GColorBrass);
-#else
-  graphics_context_set_fill_color(ctx, GColorBlack);
-#endif
+  graphics_context_set_fill_color(ctx, COLOR_STATUSBAR_BG);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
   // Time + battery text
-#ifdef PBL_COLOR
-  graphics_context_set_text_color(ctx, GColorBlack);
-#else
-  graphics_context_set_text_color(ctx, GColorWhite);
-#endif
+  graphics_context_set_text_color(ctx, COLOR_STATUSBAR_FG);
   graphics_draw_text(ctx, s_status_bar_text,
                      fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
                      GRect(0, 1, bounds.size.w, bounds.size.h - 2),
@@ -54,11 +48,7 @@ static void status_bar_update_proc(Layer *layer, GContext *ctx) {
                      GTextAlignmentCenter, NULL);
 
   // Dotted line along the bottom edge (2px on, 2px off)
-#ifdef PBL_COLOR
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-#else
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-#endif
+  graphics_context_set_stroke_color(ctx, COLOR_STATUSBAR_FG);
   int y = bounds.size.h - 1;
   for (int x = 0; x < bounds.size.w; x += 4) {
     graphics_draw_pixel(ctx, GPoint(x,     y));
@@ -95,6 +85,7 @@ void refresh_custom_status_bars(void) {
   if (s_timers_status_bar_layer)    layer_mark_dirty(s_timers_status_bar_layer);
   if (s_alarms_status_bar_layer)    layer_mark_dirty(s_alarms_status_bar_layer);
   if (s_weather_status_bar_layer)   layer_mark_dirty(s_weather_status_bar_layer);
+  if (s_tokens_status_bar_layer)    layer_mark_dirty(s_tokens_status_bar_layer);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
@@ -116,6 +107,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *timers_t     = dict_find(iterator, KEY_TIMERS_LIST);
   Tuple *alarms_t     = dict_find(iterator, KEY_ALARMS_LIST);
   Tuple *weather_t    = dict_find(iterator, KEY_WEATHER_DATA);
+  Tuple *tokens_t     = dict_find(iterator, KEY_TOKENS_DATA);
 
   if (response_t) {
     show_response(response_t->value->cstring);
@@ -170,6 +162,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       window_stack_push(s_weather_window, false);
 #else
       window_stack_push(s_weather_window, true);
+#endif
+    }
+  }
+  if (tokens_t) {
+    show_tokens(tokens_t->value->cstring);
+    if (window_stack_get_top_window() != s_tokens_window) {
+#ifdef PBL_ROUND
+      window_stack_push(s_tokens_window, false);
+#else
+      window_stack_push(s_tokens_window, true);
 #endif
     }
   }
@@ -245,6 +247,9 @@ static void init(void) {
   s_weather_window = window_create();
   window_set_window_handlers(s_weather_window, weather_window_get_handlers());
 
+  s_tokens_window = window_create();
+  window_set_window_handlers(s_tokens_window, tokens_window_get_handlers());
+
 #ifdef PBL_ROUND
   window_stack_push(s_main_window, false);
 #else
@@ -263,6 +268,7 @@ static void deinit(void) {
   window_destroy(s_timers_window);
   window_destroy(s_alarms_window);
   window_destroy(s_weather_window);
+  window_destroy(s_tokens_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);

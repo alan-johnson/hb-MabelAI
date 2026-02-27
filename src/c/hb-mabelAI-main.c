@@ -2,12 +2,13 @@
 
 // Uncomment when running in the Pebble emulator (no real microphone).
 // Comment out before deploying to a real watch.
-//#define EMULATOR
+#define EMULATOR
 
 #ifdef EMULATOR
   #define TEST_QUERY_REMINDER "Remind me to take my medication tomorrow at 9am"
   #define TEST_QUERY_TIMER    "Set a timer for 10 minutes"
   #define TEST_QUERY_ALARM    "Set an alarm for 7am tomorrow"
+  #define TEST_QUERY_AI       "What is the capital of Luxemburg?"
 #endif
 
 // ---- Private layer state ----
@@ -124,9 +125,12 @@ static void start_dictation(void) {
 static void main_select_click_handler(ClickRecognizerRef recognizer, void *context) {
 #if defined(EMULATOR)
   // Emulator has no real mic — cycle through test queries for full round-trip testing.
-  // Press SELECT repeatedly to test: reminder → timer → alarm → repeat.
+  // Press SELECT repeatedly to test: AI → reminder → timer → alarm → repeat.
+  // AI query is first so it fires on the very first press (before the result
+  // window is pushed and buries the main window's click handler).
   static uint8_t s_test_index = 0;
   static const char *s_test_queries[] = {
+    TEST_QUERY_AI,
     TEST_QUERY_REMINDER,
     TEST_QUERY_TIMER,
     TEST_QUERY_ALARM,
@@ -144,7 +148,7 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
     window_stack_push(s_result_window, true);
 #endif
   }
-  send_query(s_test_queries[s_test_index % 3]);
+  send_query(s_test_queries[s_test_index % 4]);
   s_test_index++;
 #elif defined(PBL_MICROPHONE)
   start_dictation();
@@ -187,17 +191,17 @@ static void bubble_update_proc(Layer *layer, GContext *ctx) {
   if (!s_bubble_path) return;
 
 #ifdef PBL_COLOR
-  // Brass background behind bubble on color watches
-  graphics_context_set_fill_color(ctx, GColorBrass);
+  // Accent background behind bubble on color watches
+  graphics_context_set_fill_color(ctx, COLOR_ACCENT);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 #endif
 
-  // White interior fill
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  // Bubble interior fill
+  graphics_context_set_fill_color(ctx, COLOR_BUBBLE_FILL);
   gpath_draw_filled(ctx, s_bubble_path);
 
-  // Black outline — single closed polygon, no horizontal base line at tail
-  graphics_context_set_stroke_color(ctx, GColorBlack);
+  // Bubble outline — single closed polygon, no horizontal base line at tail
+  graphics_context_set_stroke_color(ctx, COLOR_BUBBLE_STROKE);
   graphics_context_set_stroke_width(ctx, 2);
   gpath_draw_outline(ctx, s_bubble_path);
 }
@@ -207,6 +211,12 @@ static void bubble_update_proc(Layer *layer, GContext *ctx) {
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
+
+  // On colour watches set the window background to brass so any pixel that
+  // shows through the circular mask (Chalk) or the action-bar gap matches.
+#ifdef PBL_COLOR
+  window_set_background_color(window, COLOR_ACCENT);
+#endif
 
   // Action bar — help top, mic middle, menu bottom (added to window after content layers)
   s_main_action_bar = action_bar_layer_create();
@@ -249,7 +259,7 @@ static void main_window_load(Window *window) {
 
   // Top half: speech bubble
   s_bubble_path  = gpath_create(&s_bubble_path_info);
-  s_bubble_layer = layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, content_w, half_h));
+  s_bubble_layer = layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, half_h));
   layer_set_update_proc(s_bubble_layer, bubble_update_proc);
   layer_add_child(window_layer, s_bubble_layer);
 
@@ -260,7 +270,7 @@ static void main_window_load(Window *window) {
   s_prompt_layer = text_layer_create(GRect(6, STATUS_BAR_LAYER_HEIGHT + 4, content_w - 12, body_h - 8));
 #endif
   text_layer_set_font(s_prompt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-  text_layer_set_text_color(s_prompt_layer, GColorBlack);
+  text_layer_set_text_color(s_prompt_layer, COLOR_TEXT);
   text_layer_set_background_color(s_prompt_layer, GColorClear);
   text_layer_set_text_alignment(s_prompt_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_prompt_layer, GTextOverflowModeWordWrap);
@@ -273,19 +283,11 @@ static void main_window_load(Window *window) {
 #else
   s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MABEL_DOG_BW);
 #endif
-#ifdef PBL_ROUND
   s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT + half_h, bounds.size.w, content_h - half_h));
-#else
-  s_splash_layer = bitmap_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT + half_h, content_w, content_h - half_h));
-#endif
   bitmap_layer_set_bitmap(s_splash_layer, s_splash_bitmap);
   bitmap_layer_set_alignment(s_splash_layer, GAlignCenter);
   bitmap_layer_set_compositing_mode(s_splash_layer, GCompOpSet);
-  #ifdef PBL_COLOR
-    bitmap_layer_set_background_color(s_splash_layer, GColorBrass);
-  #else
-    bitmap_layer_set_background_color(s_splash_layer, GColorWhite);
-  #endif
+  bitmap_layer_set_background_color(s_splash_layer, COLOR_SPLASH_BG);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_splash_layer));
 
   // Status bar added before action bar — action bar renders on top in the overlap corner

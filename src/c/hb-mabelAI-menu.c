@@ -3,7 +3,7 @@
 // ---- Private state ----
 static SimpleMenuLayer  *s_menu_layer;
 static SimpleMenuSection s_menu_sections[1];
-static SimpleMenuItem    s_menu_items[6];
+static SimpleMenuItem    s_menu_items[7];
 
 // ---- Callbacks ----
 
@@ -54,6 +54,15 @@ static void send_weather_request(void) {
   app_message_outbox_send();
 }
 
+static void send_tokens_request(void) {
+  DictionaryIterator *iter;
+  AppMessageResult result = app_message_outbox_begin(&iter);
+  if (result != APP_MSG_OK) { show_send_error(); return; }
+  int32_t val = 1;
+  dict_write_int(iter, KEY_TOKENS_REQUEST, &val, sizeof(int32_t), true);
+  app_message_outbox_send();
+}
+
 static void menu_select_callback(int index, void *context) {
   (void)context;
   if (index == 0) {
@@ -66,13 +75,16 @@ static void menu_select_callback(int index, void *context) {
     show_weather(STR_WEATHER_LOADING);
     send_weather_request();
   } else if (index == 4) {
+    show_tokens(STR_TOKENS_LOADING);
+    send_tokens_request();
+  } else if (index == 5) {
     window_set_user_data(s_text_window, (void *)STR_ABOUT_TEXT);
 #ifdef PBL_ROUND
     window_stack_push(s_text_window, false);
 #else
     window_stack_push(s_text_window, true);
 #endif
-  } else if (index == 5) {
+  } else if (index == 6) {
     window_set_user_data(s_text_window, (void *)STR_LEGAL_TEXT);
 #ifdef PBL_ROUND
     window_stack_push(s_text_window, false);
@@ -92,8 +104,9 @@ static void menu_window_load(Window *window) {
   s_menu_items[1] = (SimpleMenuItem){ .title = STR_MENU_ITEM_TIMERS,    .callback = menu_select_callback };
   s_menu_items[2] = (SimpleMenuItem){ .title = STR_MENU_ITEM_ALARMS,    .callback = menu_select_callback };
   s_menu_items[3] = (SimpleMenuItem){ .title = STR_MENU_ITEM_WEATHER,   .callback = menu_select_callback };
-  s_menu_items[4] = (SimpleMenuItem){ .title = STR_MENU_ITEM_ABOUT,     .callback = menu_select_callback };
-  s_menu_items[5] = (SimpleMenuItem){ .title = STR_MENU_ITEM_LEGAL,     .callback = menu_select_callback };
+  s_menu_items[4] = (SimpleMenuItem){ .title = STR_MENU_ITEM_TOKENS,    .callback = menu_select_callback };
+  s_menu_items[5] = (SimpleMenuItem){ .title = STR_MENU_ITEM_ABOUT,     .callback = menu_select_callback };
+  s_menu_items[6] = (SimpleMenuItem){ .title = STR_MENU_ITEM_LEGAL,     .callback = menu_select_callback };
 
   s_menu_sections[0] = (SimpleMenuSection){
     .items     = s_menu_items,

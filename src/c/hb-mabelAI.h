@@ -2,6 +2,25 @@
 #include <pebble.h>
 #include "hb-strings.h"
 
+// ---- Color scheme — change these to retheme the app ----
+// Non-platform-conditional (used on all watches)
+#define COLOR_TEXT          GColorBlack    // primary body text
+#define COLOR_TEXT_LABEL    GColorDarkGray // section label text (muted)
+#define COLOR_BUBBLE_FILL   GColorWhite    // speech bubble interior
+#define COLOR_BUBBLE_STROKE GColorBlack    // speech bubble outline
+#define COLOR_DIVIDER       GColorBlack    // horizontal divider line
+#define COLOR_ACCENT        GColorBrass    // primary accent (color watches)
+// Platform-conditional colors
+#ifdef PBL_COLOR
+  #define COLOR_STATUSBAR_BG  GColorBrass
+  #define COLOR_STATUSBAR_FG  GColorBlack
+  #define COLOR_SPLASH_BG     GColorBrass
+#else
+  #define COLOR_STATUSBAR_BG  GColorBlack
+  #define COLOR_STATUSBAR_FG  GColorWhite
+  #define COLOR_SPLASH_BG     GColorWhite
+#endif
+
 // AppMessage keys — must match hb-mabelAI.c and index.js
 #define KEY_QUERY             0
 #define KEY_RESPONSE          1
@@ -14,6 +33,8 @@
 #define KEY_ALARMS_LIST       8
 #define KEY_WEATHER_REQUEST   9
 #define KEY_WEATHER_DATA      10
+#define KEY_TOKENS_REQUEST    11
+#define KEY_TOKENS_DATA       12
 
 // ---- Shared state (defined in hb-mabelAI.c) ----
 extern char    s_response_buffer[1804];
@@ -32,6 +53,7 @@ extern Window  *s_reminders_window;
 extern Window  *s_timers_window;
 extern Window  *s_alarms_window;
 extern Window  *s_weather_window;
+extern Window  *s_tokens_window;
 
 // ---- Shared custom status bar ----
 // Shared text buffer — all windows' status bar layers read from this.
@@ -45,6 +67,7 @@ extern Layer *s_reminders_status_bar_layer;
 extern Layer *s_timers_status_bar_layer;
 extern Layer *s_alarms_status_bar_layer;
 extern Layer *s_weather_status_bar_layer;
+extern Layer *s_tokens_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
 // Creates a full-width status bar Layer (with dotted bottom line), adds it to window_layer, and returns it.
@@ -89,3 +112,7 @@ WindowHandlers alarms_window_get_handlers(void);
 // ---- API provided by hb-mabelAI-weather.c ----
 void show_weather(const char *text);
 WindowHandlers weather_window_get_handlers(void);
+
+// ---- API provided by hb-mabelAI-tokens.c ----
+void show_tokens(const char *text);
+WindowHandlers tokens_window_get_handlers(void);

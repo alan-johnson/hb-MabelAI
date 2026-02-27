@@ -96,7 +96,7 @@ static void result_window_load(Window *window) {
   s_request_label = text_layer_create(
       GRect(h_pad, STATUS_BAR_LAYER_HEIGHT + 2, text_w, label_h));
   text_layer_set_font(s_request_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text_color(s_request_label, GColorDarkGray);
+  text_layer_set_text_color(s_request_label, COLOR_TEXT_LABEL);
   text_layer_set_background_color(s_request_label, GColorClear);
   text_layer_set_text(s_request_label, STR_SECTION_REQUEST);
   layer_add_child(window_layer, text_layer_get_layer(s_request_label));
@@ -104,21 +104,21 @@ static void result_window_load(Window *window) {
   s_request_text = text_layer_create(
       GRect(h_pad, STATUS_BAR_LAYER_HEIGHT + label_h + 2, text_w, req_h - label_h - 4));
   text_layer_set_font(s_request_text, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_color(s_request_text, GColorBlack);
+  text_layer_set_text_color(s_request_text, COLOR_TEXT);
   text_layer_set_background_color(s_request_text, GColorClear);
   text_layer_set_overflow_mode(s_request_text, GTextOverflowModeTrailingEllipsis);
   layer_add_child(window_layer, text_layer_get_layer(s_request_text));
 
   // Thin horizontal divider
   s_divider_layer = text_layer_create(GRect(h_pad, div_y, text_w, 1));
-  text_layer_set_background_color(s_divider_layer, GColorBlack);
+  text_layer_set_background_color(s_divider_layer, COLOR_DIVIDER);
   layer_add_child(window_layer, text_layer_get_layer(s_divider_layer));
 
   // ---- MABEL section ----
   s_mabel_label = text_layer_create(
       GRect(h_pad, div_y + 2, text_w, label_h));
   text_layer_set_font(s_mabel_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text_color(s_mabel_label, GColorDarkGray);
+  text_layer_set_text_color(s_mabel_label, COLOR_TEXT_LABEL);
   text_layer_set_background_color(s_mabel_label, GColorClear);
   text_layer_set_text(s_mabel_label, STR_SECTION_MABEL);
   layer_add_child(window_layer, text_layer_get_layer(s_mabel_label));
@@ -129,7 +129,7 @@ static void result_window_load(Window *window) {
 
   s_response_layer = text_layer_create(GRect(0, 0, text_w, 2000));
   text_layer_set_font(s_response_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_color(s_response_layer, GColorBlack);
+  text_layer_set_text_color(s_response_layer, COLOR_TEXT);
   text_layer_set_background_color(s_response_layer, GColorClear);
   text_layer_set_overflow_mode(s_response_layer, GTextOverflowModeWordWrap);
   scroll_layer_add_child(s_scroll_layer, text_layer_get_layer(s_response_layer));

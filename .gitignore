@@ -13,6 +13,7 @@ node_modules/
 src/pkjs/env-defaults.js
 
 # Local test scripts — contain API keys, never commit
+.env
 scripts/test-*.sh
 
 # macOS
