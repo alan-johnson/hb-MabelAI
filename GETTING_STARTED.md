@@ -1,6 +1,6 @@
 # Getting Started with Mabel AI
 
-Mabel is an AI assistant for your Pebble smartwatch. Ask questions, get answers, and set reminders — all from your wrist.
+Mabel is an AI assistant for your Pebble smartwatch. Ask questions, get answers, and set reminders, alarms and timers — all from your wrist.
 
 ---
 
@@ -8,7 +8,7 @@ Mabel is an AI assistant for your Pebble smartwatch. Ask questions, get answers,
 
 | Item | Notes |
 |------|-------|
-| Pebble smartwatch | Pebble Time, Pebble Time Round, Pebble Time 2, or Pebble 2 |
+| Pebble smartwatch | Pebble Time, Pebble Time Round, or Pebble 2 Duo. Will support the Pebble Time 2 Round and Pebble Time 2 when release.|
 | iPhone or Android phone | With Bluetooth |
 | Rebble app + subscription | Free app; ~$3/month subscription required for voice |
 | AI API key | At least one provider (Gemini has a free tier — see below) |
@@ -19,10 +19,10 @@ Mabel is an AI assistant for your Pebble smartwatch. Ask questions, get answers,
 
 Rebble is the community-run replacement for Pebble's servers. You need it to connect your watch to your phone and to use voice dictation.
 
-1. **Install the Rebble app** on your phone from the App Store or Google Play.
+1. **Install the Pebble app** on your phone from the App Store or Google Play.
 2. **Create a free Rebble account** at [rebble.io](https://rebble.io).
 3. **Subscribe to Rebble** (~$3/month) to enable voice dictation on the watch.
-4. Open the Rebble app and follow the setup wizard to pair your Pebble watch.
+4. Open the Pebble app and follow the setup wizard to pair your Pebble watch.
 
 > If your watch was previously paired to the original Pebble app, the Rebble setup wizard will walk you through migrating.
 
@@ -80,8 +80,8 @@ Gemini's free tier is generous and sufficient for typical watch use.
 ## Step 5 — Ask Your First Question
 
 1. On your watch, open the **Mabel** app.
-2. Press the **middle button (MIC)** to start listening.
-3. Speak your question clearly and wait a moment for the dictation to complete.
+2. Click the **middle button (MIC)** to start listening.
+3. Speak your question clearly then click the **SELECT** button when done. Wait a moment for the dictation to complete.
 4. Review the transcription on screen.
 5. Press **SELECT** (middle button with the checkmark) to send it to Mabel.
 6. Mabel's answer will appear on the response screen. Use **UP/DOWN** to scroll.
@@ -111,6 +111,71 @@ Mabel will confirm the reminder and create a pin in your Pebble timeline. The re
 4. Use **UP/DOWN** to scroll. Press **BACK** to return.
 
 > **Note:** The Reminders list shows reminders created by Mabel since you installed the app. You can also view all timeline events by pressing **UP** or **DOWN** from your watch face.
+
+---
+
+## Step 8 — Set a Timer
+
+Ask Mabel naturally:
+
+- *"Set a timer for 10 minutes"*
+- *"Timer for 30 seconds"*
+- *"Set a pasta timer for 12 minutes"*
+
+Mabel will confirm the timer and create a pin in your Pebble timeline. The timer will fire as a notification when time is up.
+
+**View your timers:**
+
+1. Press the **bottom button (MENU)** from the main screen.
+2. Select **Timers**.
+3. Your upcoming timers are listed in order. Press **BACK** to return.
+
+---
+
+## Step 9 — Set an Alarm
+
+Ask Mabel naturally:
+
+- *"Set an alarm for 7am tomorrow"*
+- *"Wake me up at 6:30"*
+- *"Alarm for Monday at 8am"*
+
+Mabel will confirm the alarm and pin it to your timeline. It will appear as a notification at the scheduled time.
+
+**View your alarms:**
+
+1. Press the **bottom button (MENU)** from the main screen.
+2. Select **Alarms**.
+3. Your upcoming alarms are listed in order. Press **BACK** to return.
+
+---
+
+## Step 10 — Check the Weather
+
+Mabel can show you current weather conditions using your phone's GPS location — no API key required.
+
+1. Press the **bottom button (MENU)** from the main screen.
+2. Select **Weather**.
+3. The weather screen shows:
+   - Current temperature and conditions (Clear, Rain, Snow, etc.)
+   - Feels-like temperature
+   - Wind speed and direction
+   - Relative humidity
+   - +1 hour forecast
+
+> **Temperature units** are chosen automatically — °F if your phone's timezone is in the US or its territories, °C everywhere else.
+
+---
+
+## Step 11 — Track Token Usage
+
+Each AI provider tracks how many tokens you've used. You can view usage and reset the counter from the watch.
+
+1. Press the **bottom button (MENU)** from the main screen.
+2. Select **Tokens**.
+3. The screen shows usage for each provider and your Rebble pin count.
+
+This is handy for keeping an eye on API costs, especially on paid tiers.
 
 ---
 
