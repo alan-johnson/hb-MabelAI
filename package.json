@@ -48,12 +48,12 @@
       {
         "type": "bitmap",
         "name": "MABEL_DOG_BW",
-        "file": "images/mabel-new-80x80bw.png"
+        "file": "images/mabel-head-80x80-gray.png"
       },
       {
         "type": "bitmap",
         "name": "MABEL_DOG_CLR",
-        "file": "images/mabel-face-color-80x80clr.png"
+        "file": "images/mabel-head-80x80-clr.png"
       },
       {
         "type": "bitmap",
