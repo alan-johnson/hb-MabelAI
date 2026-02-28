@@ -1,4 +1,4 @@
-# hb Mabel AI for Pebble
+# hb MabelAI for Pebble
 
 A Pebble watchapp that lets you speak questions to an AI and read the responses on your watch. Supports Claude, Gemini, and ChatGPT.
 
@@ -70,7 +70,7 @@ Obtain a key for whichever provider(s) you want to use:
 
 ### 2. Configure API Keys
 
-Open the Pebble app on your phone → tap the gear icon next to hb Mabel AI → enter your key(s) and preferred provider in the settings page.
+Open the Pebble app on your phone → tap the gear icon next to hb MabelAI → enter your key(s) and preferred provider in the settings page.
 
 ### 3. Build & Install
 ```bash

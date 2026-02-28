@@ -31,7 +31,7 @@ Rebble is the community-run replacement for Pebble's servers. You need it to con
 ## Step 2 — Install Mabel
 
 1. Open the Pebble app on your phone.
-2. Go to the **App Store** tab and search for **"hb Mabel AI"**.
+2. Go to the **App Store** tab and search for **"hb MabelAI"**.
 3. Tap **Install** — the app will appear on your watch within a few seconds.
 
 ---
@@ -70,7 +70,7 @@ Gemini's free tier is generous and sufficient for typical watch use.
 ## Step 4 — Configure Mabel
 
 1. On your phone, open the Pebble app.
-2. Go to **Apps** → find **hb Mabel AI** → tap the **settings gear**.
+2. Go to **Apps** → find **hb MabelAI** → tap the **settings gear**.
 3. Choose your **AI Provider** (Gemini, Claude, or ChatGPT).
 4. Paste your **API key** into the corresponding field.
 5. Tap **Save** — your watch will confirm "Settings saved!"
@@ -79,7 +79,7 @@ Gemini's free tier is generous and sufficient for typical watch use.
 
 ## Step 5 — Ask Your First Question
 
-1. On your watch, open the **hb Mabel AI** app.
+1. On your watch, open the **hb MabelAI** app.
 2. Click the **middle button (MIC)** to start listening.
 3. Speak your question clearly then click the **SELECT** button when done. Wait a moment for the dictation to complete.
 4. Review the transcription on screen.
@@ -105,7 +105,7 @@ Mabel will confirm the reminder and create a pin in your Pebble timeline. The re
 
 ## Step 7 — View Your Reminders
 
-1. From the hb Mabel AI main screen, press the **bottom button (MENU)**.
+1. From the hb MabelAI main screen, press the **bottom button (MENU)**.
 2. Select **Reminders**.
 3. Your upcoming reminders are listed in chronological order.
 4. Use **UP/DOWN** to scroll. Press **BACK** to return.

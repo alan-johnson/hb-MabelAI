@@ -1,5 +1,5 @@
 {
-  "name": "hb-mabel-ai",
+  "name": "hb-mabelai",
   "author": "handsbreadth LLC",
   "version": "1.4.0",
   "keywords": ["pebble-app"],
@@ -12,7 +12,7 @@
   },
   "dependencies": {},
   "pebble": {
-    "displayName": "hb Mabel AI",
+    "displayName": "hb MabelAI",
     "uuid": "a1253abf-48bd-4bb1-a9d6-b866b60595e1",
     "sdkVersion": "3",
     "enableMultiJS": true,
