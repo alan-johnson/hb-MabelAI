@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Settings</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#111;color:#eee;padding:16px 16px 40px}
+h1{font-size:20px;font-weight:700;color:#f90;text-align:center;margin-bottom:20px;letter-spacing:.5px}
+.card{background:#1c1c1c;border-radius:10px;padding:14px 14px 18px;margin-bottom:14px}
+label{display:block;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.field{margin-top:14px}
+input[type=password],select{width:100%;padding:9px 10px;background:#2a2a2a;color:#eee;border:1px solid #3a3a3a;border-radius:6px;font-size:15px;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.providers{display:flex;gap:8px;margin-bottom:2px}
+.provider-btn{flex:1;padding:9px 4px;background:#2a2a2a;color:#888;border:1px solid #3a3a3a;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:background .15s,color .15s,border-color .15s}
+.provider-btn.active{background:#f90;color:#000;border-color:#f90}
+input[type=range]{width:100%;margin:8px 0 4px;accent-color:#f90}
+.range-row{display:flex;justify-content:space-between;align-items:baseline}
+.range-val{color:#f90;font-size:13px;font-weight:600}
+button{display:block;width:100%;padding:14px;background:#f90;color:#000;font-size:17px;font-weight:700;border:none;border-radius:10px;cursor:pointer;margin-top:20px}
+button:active{background:#d70}
+.hint{font-size:11px;color:#555;margin-top:5px}
+.usage-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #2a2a2a}
+.usage-row:last-of-type{border-bottom:none}
+.usage-name{font-size:13px;font-weight:600;color:#ccc}
+.usage-stats{font-size:11px;color:#666;text-align:right}
+.reset-btn{display:block;width:100%;padding:9px;background:#2a2a2a;color:#888;font-size:13px;font-weight:600;border:1px solid #3a3a3a;border-radius:6px;cursor:pointer;margin-top:12px;text-align:center}
+.reset-btn:active{background:#3a2a2a;color:#f90}
+</style>
+</head>
+<body>
+
+<h1>AI Settings</h1>
+
+<div class="card">
+  <label>Provider</label>
+  <div class="providers">
+    <div class="provider-btn" id="btn-claude"  onclick="setProvider('claude')">Claude</div>
+    <div class="provider-btn" id="btn-gemini"  onclick="setProvider('gemini')">Gemini</div>
+    <div class="provider-btn" id="btn-chatgpt" onclick="setProvider('chatgpt')">ChatGPT</div>
+  </div>
+  <input type="hidden" id="provider" value="claude">
+</div>
+
+<div class="card">
+  <label id="keyLabel">API Key</label>
+  <input type="password" id="claudeApiKey"  placeholder="sk-ant-api03-..." value="">
+  <input type="password" id="geminiApiKey"  placeholder="AIza..."          value="" style="display:none">
+  <input type="password" id="chatgptApiKey" placeholder="sk-..."           value="" style="display:none">
+  <p class="hint" id="keyHint"></p>
+</div>
+
+<div class="card">
+  <label>Model</label>
+  <select id="model"></select>
+
+  <div class="field">
+    <div class="range-row"><label>Max Response Tokens</label><span class="range-val" id="tokVal">300</span></div>
+    <input type="range" id="maxTokens" min="100" max="600" step="50" value="300" oninput="document.getElementById('tokVal').textContent=this.value">
+    <p class="hint">Higher = longer answers, slower response</p>
+  </div>
+
+  <div class="field">
+    <div class="range-row"><label>Conversation Memory</label><span class="range-val" id="histVal">4 turns</span></div>
+    <input type="range" id="maxHistory" min="0" max="10" step="1" value="4" oninput="updateHist(this.value)">
+    <p class="hint">How many back-and-forth exchanges to remember (0 = none)</p>
+  </div>
+</div>
+
+<button onclick="save()">Save Settings</button>
+
+<div class="card">
+  <label>Usage Statistics</label>
+  <div id="usageRows"></div>
+  <div class="reset-btn" onclick="resetStats()">Reset Stats</div>
+</div>
+
+<script>
+var MODELS = {
+  claude:  [
+    {v:'claude-haiku-4-5-20251001', l:'Haiku 4.5 \u2014 Fast'},
+    {v:'claude-sonnet-4-6',         l:'Sonnet 4.6 \u2014 Smart'},
+    {v:'claude-opus-4-6',           l:'Opus 4.6 \u2014 Best'}
+  ],
+  gemini:  [
+    {v:'gemini-2.5-flash',      l:'Gemini 2.5 Flash \u2014 Good default'},
+    {v:'gemini-2.5-flash-lite', l:'Gemini 2.5 Flash \u2014 Fast, Cheap'},
+    {v:'gemini-2.5-pro',        l:'Gemini 2.5 Pro \u2014 Best'}
+  ],
+  chatgpt: [
+    {v:'gpt-4o-mini', l:'GPT-4o Mini \u2014 Fast'},
+    {v:'gpt-4o',      l:'GPT-4o \u2014 Smart'},
+    {v:'gpt-4-turbo', l:'GPT-4 Turbo \u2014 Best'}
+  ]
+};
+var KEY_HINTS = {
+  claude:  'Found at console.anthropic.com',
+  gemini:  'Found at aistudio.google.com/apikey',
+  chatgpt: 'Found at platform.openai.com/api-keys'
+};
+
+var currentSettings = {};
+
+function setProvider(p) {
+  document.getElementById('provider').value = p;
+  ['claude','gemini','chatgpt'].forEach(function(id) {
+    document.getElementById('btn-'+id).className = 'provider-btn' + (p === id ? ' active' : '');
+    document.getElementById(id+'ApiKey').style.display = p === id ? 'block' : 'none';
+  });
+  document.getElementById('keyHint').textContent = KEY_HINTS[p] || '';
+  populateModels(p);
+}
+
+function populateModels(p) {
+  var sel = document.getElementById('model');
+  sel.innerHTML = '';
+  (MODELS[p] || []).forEach(function(m) {
+    var o = document.createElement('option');
+    o.value = m.v;
+    o.textContent = m.l;
+    if (m.v === currentSettings.model) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function updateHist(v) {
+  document.getElementById('histVal').textContent = v + (v == 1 ? ' turn' : ' turns');
+}
+
+function collectCfg() {
+  var p = document.getElementById('provider').value;
+  return {
+    provider:      p,
+    claudeApiKey:  document.getElementById('claudeApiKey').value,
+    geminiApiKey:  document.getElementById('geminiApiKey').value,
+    chatgptApiKey: document.getElementById('chatgptApiKey').value,
+    model:         document.getElementById('model').value,
+    maxTokens:     parseInt(document.getElementById('maxTokens').value),
+    maxHistory:    parseInt(document.getElementById('maxHistory').value)
+  };
+}
+
+function save() {
+  location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(collectCfg()));
+}
+
+function resetStats() {
+  var cfg = collectCfg();
+  cfg.resetUsage = true;
+  location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(cfg));
+}
+
+function fmt(n) {
+  return (n || 0).toLocaleString();
+}
+
+function renderUsage(usage) {
+  var container = document.getElementById('usageRows');
+  container.innerHTML = '';
+  ['claude','gemini','chatgpt'].forEach(function(p) {
+    var u = (usage && usage[p]) || {requests:0, tokensIn:0, tokensOut:0};
+    var detail = u.requests === 0
+      ? 'No requests yet'
+      : fmt(u.requests) + ' req \u2022 ' + fmt(u.tokensIn) + ' in / ' + fmt(u.tokensOut) + ' out';
+    var label = p.charAt(0).toUpperCase() + p.slice(1);
+    if (p === 'chatgpt') label = 'ChatGPT';
+    var row = document.createElement('div');
+    row.className = 'usage-row';
+    row.innerHTML =
+      '<span class="usage-name">' + label + '</span>' +
+      '<span class="usage-stats">' + detail + '</span>';
+    container.appendChild(row);
+  });
+}
+
+// Read settings from URL hash (passed by pkjs config.js)
+(function init() {
+  var hash = location.hash.replace(/^#/, '');
+  var settings = {};
+  var usage = {};
+  if (hash) {
+    try {
+      var parsed = JSON.parse(decodeURIComponent(hash));
+      settings = parsed.settings || {};
+      usage    = parsed.usage    || {};
+    } catch(e) {}
+  }
+  currentSettings = settings;
+
+  var provider   = settings.provider      || 'claude';
+  var maxTokens  = settings.maxTokens     != null ? settings.maxTokens  : 300;
+  var maxHistory = settings.maxHistory    != null ? settings.maxHistory : 4;
+
+  document.getElementById('claudeApiKey').value  = settings.claudeApiKey  || '';
+  document.getElementById('geminiApiKey').value  = settings.geminiApiKey  || '';
+  document.getElementById('chatgptApiKey').value = settings.chatgptApiKey || '';
+  document.getElementById('maxTokens').value     = maxTokens;
+  document.getElementById('tokVal').textContent  = maxTokens;
+  document.getElementById('maxHistory').value    = maxHistory;
+  updateHist(maxHistory);
+
+  setProvider(provider);
+  renderUsage(usage);
+})();
+</script>
+</body>
+</html>
