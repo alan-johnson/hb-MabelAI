@@ -50,7 +50,7 @@
         "type": "png",
         "name": "IMAGE_MENU_ICON",
         "file": "images/mabel-head-25x25.png"
-      }.
+      },
       {
         "type": "bitmap",
         "name": "MABEL_DOG_BW",
