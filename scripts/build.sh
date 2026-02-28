@@ -95,9 +95,6 @@ minify_js() {
     echo "  → JS minification failed — keeping original"
   fi
 
-  local size
-  size=$(wc -c < "$pbw" | tr -d ' ')
-  echo "  → Final .pbw: ${size} bytes ($((size / 1024)) KB)"
 }
 
 # ---- modes ------------------------------------------------------------------
@@ -115,6 +112,8 @@ case "$MODE" in
     # Flush any pending writes from pebble's bundler subprocess, then strip.
     sync
     strip_sourcemap
+    pbw_size=$(wc -c < "build/hb-MabelAI.pbw" | tr -d ' ')
+    echo "  → Final .pbw: ${pbw_size} bytes ($((pbw_size / 1024)) KB)"
     echo ""
     echo "Done.  Upload to the Rebble store:"
     echo "  build/hb-MabelAI.pbw"
