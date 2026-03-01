@@ -37,71 +37,71 @@ build() {
   pebble build
 }
 
-# Remove the source map from the .pbw (debug-only artifact; saves ~52 KB).
-# Uses Python's zipfile to rewrite the archive atomically — avoids the race
-# where pebble's bundler finalises the .pbw after `pebble build` returns.
-strip_sourcemap() {
-  # return  # IGNORE — source map is small and can be useful for debugging; see #24
+# Optimise the .pbw in a single Python pass:
+#   • strips pebble-js-app.js.map (saves ~52 KB)
+#   • minifies pebble-js-app.js via terser if available (saves ~12-15 KB)
+#   • forces every entry to STORED (compress_type=0) — required by Pebble JS runtime
+#
+# Doing both operations in one Python rewrite avoids the flag_bits incompatibility
+# that occurs when InfoZIP's `zip` command sets data-descriptor bits that Python's
+# zipfile module then copies verbatim without writing the matching descriptors.
+optimize_pbw() {
   local pbw="build/hb-MabelAI.pbw"
   [ -f "$pbw" ] || return 0
-  if python3 - "$pbw" << 'PYEOF'
+
+  # Optionally minify pebble-js-app.js with terser before the Python rewrite.
+  local minified_js=""
+  if command -v npx &>/dev/null; then
+    local tmpdir
+    tmpdir=$(mktemp -d)
+    trap 'rm -rf "$tmpdir"' RETURN
+    if unzip -q -o "$pbw" pebble-js-app.js -d "$tmpdir" 2>/dev/null; then
+      local orig
+      orig=$(wc -c < "$tmpdir/pebble-js-app.js" | tr -d ' ')
+      if npx terser \
+          --compress "drop_console=true" \
+          --mangle \
+          --comments false \
+          "$tmpdir/pebble-js-app.js" \
+          -o "$tmpdir/pebble-js-app.min.js" 2>/dev/null; then
+        local new
+        new=$(wc -c < "$tmpdir/pebble-js-app.min.js" | tr -d ' ')
+        minified_js="$tmpdir/pebble-js-app.min.js"
+        echo "  → JS minified: $orig → $new bytes (saved $((orig - new)) bytes)"
+      else
+        echo "  → JS minification failed — keeping original"
+      fi
+    fi
+  fi
+
+  # Single Python pass: strip source map, inject minified JS (if any), force STORED.
+  if python3 - "$pbw" "$minified_js" << 'PYEOF'
 import sys, zipfile, os
-MAP = 'pebble-js-app.js.map'
-pbw = sys.argv[1]
+
+MAP   = 'pebble-js-app.js.map'
+JSKEY = 'pebble-js-app.js'
+
+pbw         = sys.argv[1]
+minified_js = sys.argv[2] if len(sys.argv) > 2 else ''
+
 with zipfile.ZipFile(pbw) as src:
-    if MAP not in src.namelist():
-        sys.exit(1)          # nothing to strip — signal caller via exit code
     tmp = pbw + '.tmp'
     with zipfile.ZipFile(tmp, 'w') as dst:
         for item in src.infolist():
-            if item.filename != MAP:
-                item.compress_type = 0  # STORED — Pebble runtime requires uncompressed entries
-                dst.writestr(item, src.read(item.filename))
-os.replace(tmp, pbw)         # atomic swap
+            if item.filename == MAP:
+                continue          # drop source map
+            item.compress_type = 0  # STORED — Pebble runtime requires uncompressed entries
+            if item.filename == JSKEY and minified_js:
+                with open(minified_js, 'rb') as fh:
+                    data = fh.read()
+            else:
+                data = src.read(item.filename)
+            dst.writestr(item, data)
+os.replace(tmp, pbw)              # atomic swap
 PYEOF
   then
     echo "  → Source map stripped"
   fi
-}
-
-# Minify the bundled JS inside the .pbw using terser (prod builds only).
-# Drops console.log calls and mangles variable names — saves ~12-15 KB.
-# Dev builds keep the full JS so `pebble logs` output remains readable.
-minify_js() {
-  return  # IGNORE — minification is nice but not worth the added complexity and dev friction right now
-  local pbw="build/hb-MabelAI.pbw"
-  if [ ! -f "$pbw" ]; then return; fi
-  if ! command -v npx &>/dev/null; then
-    echo "  → npx not found — skipping JS minification"
-    return
-  fi
-
-  local tmpdir
-  tmpdir=$(mktemp -d)
-  trap 'rm -rf "$tmpdir"' RETURN
-
-  unzip -q -o "$pbw" pebble-js-app.js -d "$tmpdir" 2>/dev/null || return
-
-  local orig new pbwabs
-  orig=$(wc -c < "$tmpdir/pebble-js-app.js" | tr -d ' ')
-  pbwabs=$(cd "$(dirname "$pbw")" && pwd)/$(basename "$pbw")
-
-  if npx terser \
-      --compress "drop_console=true" \
-      --mangle \
-      --comments false \
-      "$tmpdir/pebble-js-app.js" \
-      -o "$tmpdir/pebble-js-app.min.js" 2>/dev/null; then
-    mv "$tmpdir/pebble-js-app.min.js" "$tmpdir/pebble-js-app.js"
-    # -0 = store without compression; Pebble's runtime requires STORED (compress=0)
-    # for pebble-js-app.js — DEFLATED entries silently break JS loading on device.
-    (cd "$tmpdir" && zip -q -j -0 "$pbwabs" pebble-js-app.js)
-    new=$(wc -c < "$tmpdir/pebble-js-app.js" | tr -d ' ')
-    echo "  → JS minified: $orig → $new bytes (saved $((orig - new)) bytes)"
-  else
-    echo "  → JS minification failed — keeping original"
-  fi
-
 }
 
 # ---- modes ------------------------------------------------------------------
@@ -115,10 +115,9 @@ case "$MODE" in
           HB_CHATGPT_API_KEY HB_MODEL HB_MAX_TOKENS HB_MAX_HISTORY
     gen_env
     build
-    minify_js
-    # Flush any pending writes from pebble's bundler subprocess, then strip.
+    # Flush any pending writes from pebble's bundler subprocess, then optimise.
     sync
-    strip_sourcemap
+    optimize_pbw
     pbw_size=$(wc -c < "build/hb-MabelAI.pbw" | tr -d ' ')
     echo "  → Final .pbw: ${pbw_size} bytes ($((pbw_size / 1024)) KB)"
     echo ""
