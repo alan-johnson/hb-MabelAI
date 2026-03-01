@@ -1,7 +1,7 @@
 {
   "name": "hb-mabelai",
   "author": "handsbreadth LLC",
-  "version": "1.4.0",
+  "version": "1.6.0",
   "keywords": ["pebble-app"],
   "private": true,
   "scripts": {

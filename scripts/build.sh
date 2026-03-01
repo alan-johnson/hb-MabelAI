@@ -31,6 +31,8 @@ gen_env() {
 }
 
 build() {
+  echo "  → Cleaning previous builds..."
+  rm -f build/hb-MabelAI.pbw build/pebble-js-app.js build/pebble-js-app.js.map 2>/dev/null || true
   echo "  → Building..."
   pebble build
 }
@@ -39,6 +41,7 @@ build() {
 # Uses Python's zipfile to rewrite the archive atomically — avoids the race
 # where pebble's bundler finalises the .pbw after `pebble build` returns.
 strip_sourcemap() {
+  # return  # IGNORE — source map is small and can be useful for debugging; see #24
   local pbw="build/hb-MabelAI.pbw"
   [ -f "$pbw" ] || return 0
   if python3 - "$pbw" << 'PYEOF'
@@ -49,9 +52,10 @@ with zipfile.ZipFile(pbw) as src:
     if MAP not in src.namelist():
         sys.exit(1)          # nothing to strip — signal caller via exit code
     tmp = pbw + '.tmp'
-    with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as dst:
+    with zipfile.ZipFile(tmp, 'w') as dst:
         for item in src.infolist():
             if item.filename != MAP:
+                item.compress_type = 0  # STORED — Pebble runtime requires uncompressed entries
                 dst.writestr(item, src.read(item.filename))
 os.replace(tmp, pbw)         # atomic swap
 PYEOF
@@ -64,6 +68,7 @@ PYEOF
 # Drops console.log calls and mangles variable names — saves ~12-15 KB.
 # Dev builds keep the full JS so `pebble logs` output remains readable.
 minify_js() {
+  return  # IGNORE — minification is nice but not worth the added complexity and dev friction right now
   local pbw="build/hb-MabelAI.pbw"
   if [ ! -f "$pbw" ]; then return; fi
   if ! command -v npx &>/dev/null; then
@@ -88,7 +93,9 @@ minify_js() {
       "$tmpdir/pebble-js-app.js" \
       -o "$tmpdir/pebble-js-app.min.js" 2>/dev/null; then
     mv "$tmpdir/pebble-js-app.min.js" "$tmpdir/pebble-js-app.js"
-    (cd "$tmpdir" && zip -q -j "$pbwabs" pebble-js-app.js)
+    # -0 = store without compression; Pebble's runtime requires STORED (compress=0)
+    # for pebble-js-app.js — DEFLATED entries silently break JS loading on device.
+    (cd "$tmpdir" && zip -q -j -0 "$pbwabs" pebble-js-app.js)
     new=$(wc -c < "$tmpdir/pebble-js-app.js" | tr -d ' ')
     echo "  → JS minified: $orig → $new bytes (saved $((orig - new)) bytes)"
   else
