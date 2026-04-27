@@ -30,6 +30,11 @@
 // ---- Alarms window ----
 #define STR_SECTION_ALARMS     "alarms"
 
+// ---- Alarm notify window (vibrating alert) ----
+#define STR_ALARM_NOTIFY_TITLE   "alarm"
+#define STR_ALARM_NOTIFY_DISMISS "Press any button to dismiss"
+#define STR_ALARM_DEFAULT_LABEL  "Alarm"
+
 // ---- Weather window ----
 #define STR_SECTION_WEATHER    "weather"
 #define STR_WEATHER_LOADING    "Getting weather..."

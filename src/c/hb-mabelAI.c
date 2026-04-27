@@ -19,6 +19,7 @@ Window  *s_timers_window;
 Window  *s_alarms_window;
 Window  *s_weather_window;
 Window  *s_tokens_window;
+Window  *s_alarm_notify_window;
 
 // ---- Custom status bar shared state ----
 char   s_status_bar_text[32]    = "";
@@ -31,6 +32,7 @@ Layer *s_timers_status_bar_layer    = NULL;
 Layer *s_alarms_status_bar_layer    = NULL;
 Layer *s_weather_status_bar_layer   = NULL;
 Layer *s_tokens_status_bar_layer    = NULL;
+Layer *s_alarm_notify_status_bar_layer = NULL;
 
 static void status_bar_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
@@ -85,7 +87,8 @@ void refresh_custom_status_bars(void) {
   if (s_timers_status_bar_layer)    layer_mark_dirty(s_timers_status_bar_layer);
   if (s_alarms_status_bar_layer)    layer_mark_dirty(s_alarms_status_bar_layer);
   if (s_weather_status_bar_layer)   layer_mark_dirty(s_weather_status_bar_layer);
-  if (s_tokens_status_bar_layer)    layer_mark_dirty(s_tokens_status_bar_layer);
+  if (s_tokens_status_bar_layer)       layer_mark_dirty(s_tokens_status_bar_layer);
+  if (s_alarm_notify_status_bar_layer) layer_mark_dirty(s_alarm_notify_status_bar_layer);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
@@ -96,18 +99,42 @@ static void battery_handler(BatteryChargeState state) {
   refresh_custom_status_bars();
 }
 
+// ---- Wakeup handler ----
+
+static void wakeup_handler(WakeupId id, int32_t cookie) {
+  persist_delete(PERSIST_KEY_ALARM_WAKEUP_ID);
+
+  if (quiet_time_is_active()) return;
+
+  char label[64];
+  snprintf(label, sizeof(label), "%s", STR_ALARM_DEFAULT_LABEL);
+  if (persist_exists(PERSIST_KEY_ALARM_LABEL)) {
+    persist_read_string(PERSIST_KEY_ALARM_LABEL, label, sizeof(label));
+  }
+  alarm_notify_set_label(label);
+  if (window_stack_get_top_window() != s_alarm_notify_window) {
+#ifdef PBL_ROUND
+    window_stack_push(s_alarm_notify_window, false);
+#else
+    window_stack_push(s_alarm_notify_window, true);
+#endif
+  }
+}
+
 // ---- AppMessage Callbacks ----
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   s_is_loading = false;
 
-  Tuple *response_t   = dict_find(iterator, KEY_RESPONSE);
-  Tuple *status_t     = dict_find(iterator, KEY_STATUS);
-  Tuple *reminders_t  = dict_find(iterator, KEY_REMINDERS_LIST);
-  Tuple *timers_t     = dict_find(iterator, KEY_TIMERS_LIST);
-  Tuple *alarms_t     = dict_find(iterator, KEY_ALARMS_LIST);
-  Tuple *weather_t    = dict_find(iterator, KEY_WEATHER_DATA);
-  Tuple *tokens_t     = dict_find(iterator, KEY_TOKENS_DATA);
+  Tuple *response_t      = dict_find(iterator, KEY_RESPONSE);
+  Tuple *status_t        = dict_find(iterator, KEY_STATUS);
+  Tuple *reminders_t     = dict_find(iterator, KEY_REMINDERS_LIST);
+  Tuple *timers_t        = dict_find(iterator, KEY_TIMERS_LIST);
+  Tuple *alarms_t        = dict_find(iterator, KEY_ALARMS_LIST);
+  Tuple *weather_t       = dict_find(iterator, KEY_WEATHER_DATA);
+  Tuple *tokens_t        = dict_find(iterator, KEY_TOKENS_DATA);
+  Tuple *alarm_wakeup_t  = dict_find(iterator, KEY_ALARM_WAKEUP);
+  Tuple *alarm_label_t   = dict_find(iterator, KEY_ALARM_LABEL);
 
   if (response_t) {
     show_response(response_t->value->cstring);
@@ -173,6 +200,23 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 #else
       window_stack_push(s_tokens_window, true);
 #endif
+    }
+  }
+  // Persist the alarm label before scheduling so it survives app restarts.
+  if (alarm_label_t) {
+    persist_write_string(PERSIST_KEY_ALARM_LABEL, alarm_label_t->value->cstring);
+  }
+  if (alarm_wakeup_t) {
+    // Cancel any previously scheduled wakeup before arming the new one.
+    if (persist_exists(PERSIST_KEY_ALARM_WAKEUP_ID)) {
+      WakeupId old_id = (WakeupId)persist_read_int(PERSIST_KEY_ALARM_WAKEUP_ID);
+      wakeup_cancel(old_id);
+      persist_delete(PERSIST_KEY_ALARM_WAKEUP_ID);
+    }
+    time_t alarm_time = (time_t)alarm_wakeup_t->value->int32;
+    WakeupId new_id   = wakeup_schedule(alarm_time, 0, true);
+    if (wakeup_id_valid(new_id)) {
+      persist_write_int(PERSIST_KEY_ALARM_WAKEUP_ID, (int32_t)new_id);
     }
   }
 }
@@ -250,6 +294,19 @@ static void init(void) {
   s_tokens_window = window_create();
   window_set_window_handlers(s_tokens_window, tokens_window_get_handlers());
 
+  s_alarm_notify_window = window_create();
+  window_set_window_handlers(s_alarm_notify_window, alarm_notify_window_get_handlers());
+
+  wakeup_service_subscribe(wakeup_handler);
+
+  // If the app was launched by a wakeup, fire the handler now that windows exist.
+  if (launch_reason() == APP_LAUNCH_WAKEUP) {
+    WakeupId wakeup_id;
+    int32_t  cookie;
+    wakeup_get_launch_reason(&wakeup_id, &cookie);
+    wakeup_handler(wakeup_id, cookie);
+  }
+
 #ifdef PBL_ROUND
   window_stack_push(s_main_window, false);
 #else
@@ -269,6 +326,7 @@ static void deinit(void) {
   window_destroy(s_alarms_window);
   window_destroy(s_weather_window);
   window_destroy(s_tokens_window);
+  window_destroy(s_alarm_notify_window);
   gbitmap_destroy(s_icon_mic);
   gbitmap_destroy(s_icon_up);
   gbitmap_destroy(s_icon_down);

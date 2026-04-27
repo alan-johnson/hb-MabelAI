@@ -35,6 +35,14 @@
 #define KEY_WEATHER_DATA      10
 #define KEY_TOKENS_REQUEST    11
 #define KEY_TOKENS_DATA       12
+// Vibrating alarm keys (phone→watch: arm wakeup; watch→phone: dismissed)
+#define KEY_ALARM_WAKEUP      13
+#define KEY_ALARM_LABEL       14
+#define KEY_ALARM_DISMISSED   15
+
+// Persist keys for vibrating alarm state
+#define PERSIST_KEY_ALARM_WAKEUP_ID  1
+#define PERSIST_KEY_ALARM_LABEL      2
 
 // ---- Shared state (defined in hb-mabelAI.c) ----
 extern char    s_response_buffer[1804];
@@ -54,6 +62,7 @@ extern Window  *s_timers_window;
 extern Window  *s_alarms_window;
 extern Window  *s_weather_window;
 extern Window  *s_tokens_window;
+extern Window  *s_alarm_notify_window;
 
 // ---- Shared custom status bar ----
 // Shared text buffer — all windows' status bar layers read from this.
@@ -68,6 +77,7 @@ extern Layer *s_timers_status_bar_layer;
 extern Layer *s_alarms_status_bar_layer;
 extern Layer *s_weather_status_bar_layer;
 extern Layer *s_tokens_status_bar_layer;
+extern Layer *s_alarm_notify_status_bar_layer;
 // Formats time + battery into s_status_bar_text and redraws all live layers.
 void refresh_custom_status_bars(void);
 // Creates a full-width status bar Layer (with dotted bottom line), adds it to window_layer, and returns it.
@@ -116,3 +126,7 @@ WindowHandlers weather_window_get_handlers(void);
 // ---- API provided by hb-mabelAI-tokens.c ----
 void show_tokens(const char *text);
 WindowHandlers tokens_window_get_handlers(void);
+
+// ---- API provided by hb-mabelAI-alarm-notify.c ----
+void alarm_notify_set_label(const char *label);
+WindowHandlers alarm_notify_window_get_handlers(void);

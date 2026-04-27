@@ -28,6 +28,14 @@ button:active{background:#d70}
 .usage-stats{font-size:11px;color:#666;text-align:right}
 .reset-btn{display:block;width:100%;padding:9px;background:#2a2a2a;color:#888;font-size:13px;font-weight:600;border:1px solid #3a3a3a;border-radius:6px;cursor:pointer;margin-top:12px;text-align:center}
 .reset-btn:active{background:#3a2a2a;color:#f90}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
+.toggle-row span{font-size:14px;color:#eee}
+.toggle{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#2a2a2a;border-radius:26px;border:1px solid #3a3a3a;transition:.2s}
+.slider:before{position:absolute;content:"";height:20px;width:20px;left:2px;bottom:2px;background:#888;border-radius:50%;transition:.2s}
+input:checked+.slider{background:#f90;border-color:#f90}
+input:checked+.slider:before{transform:translateX(18px);background:#000}
 </style>
 </head>
 <body>
@@ -67,6 +75,18 @@ button:active{background:#d70}
     <input type="range" id="maxHistory" min="0" max="10" step="1" value="4" oninput="updateHist(this.value)">
     <p class="hint">How many back-and-forth exchanges to remember (0 = none)</p>
   </div>
+</div>
+
+<div class="card">
+  <label>Alarm Behavior</label>
+  <div class="toggle-row">
+    <span>Vibrate until dismissed</span>
+    <label class="toggle">
+      <input type="checkbox" id="alarmVibrate">
+      <span class="slider"></span>
+    </label>
+  </div>
+  <p class="hint" style="margin-top:8px">When on, alarms vibrate on the watch until you press any button. Quiet Time is always respected.</p>
 </div>
 
 <button onclick="save()">Save Settings</button>
@@ -138,7 +158,8 @@ function collectCfg() {
     chatgptApiKey: document.getElementById('chatgptApiKey').value,
     model:         document.getElementById('model').value,
     maxTokens:     parseInt(document.getElementById('maxTokens').value),
-    maxHistory:    parseInt(document.getElementById('maxHistory').value)
+    maxHistory:    parseInt(document.getElementById('maxHistory').value),
+    alarmVibrate:  document.getElementById('alarmVibrate').checked
   };
 }
 
@@ -196,9 +217,10 @@ function renderUsage(usage) {
   document.getElementById('claudeApiKey').value  = settings.claudeApiKey  || '';
   document.getElementById('geminiApiKey').value  = settings.geminiApiKey  || '';
   document.getElementById('chatgptApiKey').value = settings.chatgptApiKey || '';
-  document.getElementById('maxTokens').value     = maxTokens;
-  document.getElementById('tokVal').textContent  = maxTokens;
-  document.getElementById('maxHistory').value    = maxHistory;
+  document.getElementById('maxTokens').value      = maxTokens;
+  document.getElementById('tokVal').textContent   = maxTokens;
+  document.getElementById('maxHistory').value     = maxHistory;
+  document.getElementById('alarmVibrate').checked = settings.alarmVibrate === true;
   updateHist(maxHistory);
 
   setProvider(provider);

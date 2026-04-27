@@ -41,7 +41,10 @@
       "KEY_WEATHER_REQUEST":   9,
       "KEY_WEATHER_DATA":      10,
       "KEY_TOKENS_REQUEST":    11,
-      "KEY_TOKENS_DATA":       12
+      "KEY_TOKENS_DATA":       12,
+      "KEY_ALARM_WAKEUP":      13,
+      "KEY_ALARM_LABEL":       14,
+      "KEY_ALARM_DISMISSED":   15
     },
     "resources": {
       "media": [
