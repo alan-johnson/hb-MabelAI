@@ -215,7 +215,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
     time_t alarm_time = (time_t)alarm_wakeup_t->value->int32;
     WakeupId new_id   = wakeup_schedule(alarm_time, 0, true);
-    if (wakeup_id_valid(new_id)) {
+    if (new_id >= 0) {
       persist_write_int(PERSIST_KEY_ALARM_WAKEUP_ID, (int32_t)new_id);
     }
   }
@@ -303,7 +303,7 @@ static void init(void) {
   if (launch_reason() == APP_LAUNCH_WAKEUP) {
     WakeupId wakeup_id;
     int32_t  cookie;
-    wakeup_get_launch_reason(&wakeup_id, &cookie);
+    wakeup_get_launch_event(&wakeup_id, &cookie);
     wakeup_handler(wakeup_id, cookie);
   }
 
