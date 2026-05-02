@@ -51,10 +51,9 @@ static void dismiss_click_handler(ClickRecognizerRef recognizer, void *context) 
 }
 
 static void alarm_click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_UP,     dismiss_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, dismiss_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN,   dismiss_click_handler);
-  window_single_click_subscribe(BUTTON_ID_BACK,   dismiss_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP,   dismiss_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, dismiss_click_handler);
+  window_single_click_subscribe(BUTTON_ID_BACK, dismiss_click_handler);
 }
 
 // ---- Window lifecycle ----

@@ -299,19 +299,21 @@ static void init(void) {
 
   wakeup_service_subscribe(wakeup_handler);
 
-  // If the app was launched by a wakeup, fire the handler now that windows exist.
+  // Push main window first so it sits at the bottom of the stack.
+  // If a wakeup launched the app, wakeup_handler will push the alarm window
+  // on top of it, making the alarm visible immediately.
+#ifdef PBL_ROUND
+  window_stack_push(s_main_window, false);
+#else
+  window_stack_push(s_main_window, true);
+#endif
+
   if (launch_reason() == APP_LAUNCH_WAKEUP) {
     WakeupId wakeup_id;
     int32_t  cookie;
     wakeup_get_launch_event(&wakeup_id, &cookie);
     wakeup_handler(wakeup_id, cookie);
   }
-
-#ifdef PBL_ROUND
-  window_stack_push(s_main_window, false);
-#else
-  window_stack_push(s_main_window, true);
-#endif
 }
 
 static void deinit(void) {

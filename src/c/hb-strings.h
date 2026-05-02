@@ -32,7 +32,7 @@
 
 // ---- Alarm notify window (vibrating alert) ----
 #define STR_ALARM_NOTIFY_TITLE   "alarm"
-#define STR_ALARM_NOTIFY_DISMISS "Press any button to dismiss"
+#define STR_ALARM_NOTIFY_DISMISS "UP, DOWN, or BACK to dismiss"
 #define STR_ALARM_DEFAULT_LABEL  "Alarm"
 
 // ---- Weather window ----
