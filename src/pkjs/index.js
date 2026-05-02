@@ -1,6 +1,10 @@
 // PebbleKit JS — runs on the phone, bridges Pebble <-> AI provider
 
-var configPage   = require('./config');
+var Clay       = require('@rebble/clay');
+var clayConfig = require('./clay-config');
+var customFn   = require('./clay-customfn');
+var clay       = new Clay(clayConfig, customFn, { autoHandleEvents: false });
+
 var aiProviders  = require('./ai-providers');
 var envDefaults  = require('./env-defaults');
 
@@ -613,22 +617,28 @@ Pebble.addEventListener('ready', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  Pebble.openURL(configPage.getConfigPageUrl(loadSettings(), loadUsage()));
+  Pebble.openURL(clay.generateUrl());
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
-  if (!e.response) return;
-  try {
-    var settings     = JSON.parse(decodeURIComponent(e.response));
-    if (settings.resetUsage) { resetUsageStats(); }
-    saveSettings(settings);
-    console.log('Settings saved: ' + JSON.stringify(settings));
-    armNextAlarmWakeup();
-    var name = PROVIDER_NAMES[settings.provider] || 'AI';
-    sendToWatch(KEY_STATUS, 'Settings saved! Press MIC to ask ' + name + '.');
-  } catch (err) {
-    console.log('Failed to parse config response: ' + err);
+  if (!e || !e.response) {
+    console.log('No configuration received.');
+    return;
   }
+  // false = do not auto-save to localStorage; saveSettings() handles storage
+  var raw = clay.getSettings(e.response, false);
+  var settings = {};
+  Object.keys(raw).forEach(function(key) {
+    settings[key] = (raw[key] !== null && typeof raw[key] === 'object' && raw[key].hasOwnProperty('value'))
+      ? raw[key].value
+      : raw[key];
+  });
+  if (settings.resetUsage) { resetUsageStats(); }
+  saveSettings(settings);
+  console.log('Settings saved: ' + JSON.stringify(settings));
+  armNextAlarmWakeup();
+  var name = PROVIDER_NAMES[settings.provider] || 'AI';
+  sendToWatch(KEY_STATUS, 'Settings saved! Press MIC to ask ' + name + '.');
 });
 
 Pebble.addEventListener('appmessage', function(e) {

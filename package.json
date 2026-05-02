@@ -1,7 +1,7 @@
 {
   "name": "hb-mabelai",
   "author": "handsbreadth LLC",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "keywords": ["pebble-app"],
   "private": true,
   "scripts": {
@@ -10,7 +10,9 @@
     "build:emu":    "bash scripts/build.sh emulator basalt",
     "build:phone":  "bash scripts/build.sh phone"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@rebble/clay": "^1.0.8"
+  },
   "pebble": {
     "displayName": "hb MabelAI",
     "uuid": "a1253abf-48bd-4bb1-a9d6-b866b60595e1",
@@ -21,7 +23,8 @@
       "chalk",
       "diorite",
       "emery",
-      "flint"
+      "flint",
+      "gabbro"
     ],
     "capabilities": ["microphone", "configurable"],
     "watchapp": {
