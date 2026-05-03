@@ -42,8 +42,10 @@ static void text_window_load(Window *window) {
   GRect       bounds       = layer_get_bounds(window_layer);
   const char *text         = (const char *)window_get_user_data(window);
 
-#ifdef PBL_ROUND
-  int h_pad = 14;
+#ifdef PBL_PLATFORM_GABBRO
+  int h_pad = 62;  // gabbro (260×260, r=130): circle clips ~61px at y≈20; content_w = 136
+#elif defined(PBL_ROUND)
+  int h_pad = 14;  // chalk (180×180)
 #else
   int h_pad = 4;
 #endif

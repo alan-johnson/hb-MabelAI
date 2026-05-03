@@ -68,8 +68,10 @@ static void alarm_notify_window_load(Window *window) {
   int h        = bounds.size.h;
   int status_h = STATUS_BAR_LAYER_HEIGHT + 2;
 
-#ifdef PBL_ROUND
-  int h_pad = 20;
+#ifdef PBL_PLATFORM_GABBRO
+  int h_pad = 62;  // gabbro (260×260, r=130): circle clips ~61px at topmost row
+#elif defined(PBL_ROUND)
+  int h_pad = 20;  // chalk (180×180)
 #else
   int h_pad = 6;
 #endif

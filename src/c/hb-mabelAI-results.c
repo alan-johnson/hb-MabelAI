@@ -81,12 +81,15 @@ static void result_window_load(Window *window) {
 
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
   int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
-#ifdef PBL_ROUND
-  int h_pad = 36;  // request label at y≈18 — circle clips x < 36, so 36 clears the edge
+#ifdef PBL_PLATFORM_GABBRO
+  // gabbro (260×260, r=130): at y≈18 circle clips x<64 left, x>196 right (content_w=230)
+  int h_pad = 66, right_pad = 38;
+#elif defined(PBL_ROUND)
+  int h_pad = 36, right_pad = 2;  // chalk (180×180)
 #else
-  int h_pad = 2;
+  int h_pad = 2,  right_pad = 2;
 #endif
-  int text_w   = content_w - h_pad - 2;
+  int text_w   = content_w - h_pad - right_pad;
   int label_h  = 18;  // GOTHIC_14_BOLD renders ~18px tall; 14 clips the bottom
   int req_h    = content_h * 2 / 5;   // ~60px Basalt, ~65px Chalk
   int div_y    = STATUS_BAR_LAYER_HEIGHT + req_h;

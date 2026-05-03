@@ -265,7 +265,10 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, s_bubble_layer);
 
   // Status text inside bubble — transparent so bubble drawing shows through
-#ifdef PBL_ROUND
+#ifdef PBL_PLATFORM_GABBRO
+  // gabbro (260×260, r=130): at y≈21 circle clips x<64 and x>196; left=66, right edge=192
+  s_prompt_layer = text_layer_create(GRect(66, STATUS_BAR_LAYER_HEIGHT + 5, content_w - 104, body_h - 10));
+#elif defined(PBL_ROUND)
   s_prompt_layer = text_layer_create(GRect(14, STATUS_BAR_LAYER_HEIGHT + 5, content_w - 28, body_h - 10));
 #else
   s_prompt_layer = text_layer_create(GRect(6, STATUS_BAR_LAYER_HEIGHT + 4, content_w - 12, body_h - 8));

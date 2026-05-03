@@ -65,12 +65,14 @@ static void timers_window_load(Window *window) {
 
   int content_w = bounds.size.w - ACTION_BAR_WIDTH;
   int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
-#ifdef PBL_ROUND
-  int h_pad = 36;
+#ifdef PBL_PLATFORM_GABBRO
+  int h_pad = 66, right_pad = 38;
+#elif defined(PBL_ROUND)
+  int h_pad = 36, right_pad = 2;
 #else
-  int h_pad = 2;
+  int h_pad = 2,  right_pad = 2;
 #endif
-  int text_w   = content_w - h_pad - 2;
+  int text_w   = content_w - h_pad - right_pad;
   int label_h  = 18;
   int scroll_h = content_h - label_h - 6;
 
