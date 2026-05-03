@@ -117,6 +117,11 @@ static void start_dictation(void) {
   s_dictation_session = dictation_session_create(512,
                                                   dictation_session_callback,
                                                   NULL);
+  if (!s_dictation_session) {
+    set_status("Dictation not ready. Try again.");
+    s_is_loading = false;
+    return;
+  }
   dictation_session_start(s_dictation_session);
 }
 #endif  // PBL_MICROPHONE && !EMULATOR
