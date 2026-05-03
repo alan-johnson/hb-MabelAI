@@ -329,10 +329,11 @@ function makePinId() {
          '-'   + Math.floor(Math.random() * 0xFFFFFF).toString(16);
 }
 
-// Create a Rebble timeline pin with a notification.
+// Create a Rebble timeline pin, optionally with a reminder notification.
 // icon: a system://images/ identifier string.
+// includeReminder: pass false for alarms (which use the wakeup path instead).
 // Calls onDone(errorString|null) when complete.
-function createTimelinePin(what, when, icon, onDone) {
+function createTimelinePin(what, when, icon, includeReminder, onDone) {
   Pebble.getTimelineToken(
     function(token) {
       var pinId = makePinId();
@@ -344,12 +345,14 @@ function createTimelinePin(what, when, icon, onDone) {
           type:     'genericPin',
           title:    what,
           tinyIcon: icon
-        },
-        reminders: [{
+        }
+      };
+      if (includeReminder) {
+        pin.reminders = [{
           time:   when,
           layout: { type: 'genericReminder', title: what }
-        }]
-      };
+        }];
+      }
 
       var xhr = new XMLHttpRequest();
       xhr.open('PUT', 'https://timeline-api.rebble.io/v1/user/pins/' + pinId, true);
@@ -570,20 +573,21 @@ function askAI(userQuery) {
 
       if (reminder && reminder.what && reminder.when) {
         saveReminder(reminder.what, reminder.when);
-        createTimelinePin(reminder.what, reminder.when, 'system://images/ALARM_CLOCK', function(err) {
+        createTimelinePin(reminder.what, reminder.when, 'system://images/ALARM_CLOCK', true, function(err) {
           if (err) { console.log('Timeline pin failed: ' + err); }
           sendToWatch(KEY_RESPONSE, truncateForWatch(displayText));
         });
       } else if (timer && timer.what && timer.when) {
         saveTimer(timer.what, timer.when);
-        createTimelinePin(timer.what, timer.when, 'system://images/GENERIC_REMINDER', function(err) {
+        createTimelinePin(timer.what, timer.when, 'system://images/GENERIC_REMINDER', true, function(err) {
           if (err) { console.log('Timeline pin failed: ' + err); }
           sendToWatch(KEY_RESPONSE, truncateForWatch(displayText));
         });
       } else if (alarm && alarm.what && alarm.when) {
         saveAlarm(alarm.what, alarm.when);
         armNextAlarmWakeup();
-        createTimelinePin(alarm.what, alarm.when, 'system://images/ALARM_CLOCK', function(err) {
+        // false: alarm uses wakeup path for notification; no timeline pin reminder needed
+        createTimelinePin(alarm.what, alarm.when, 'system://images/ALARM_CLOCK', false, function(err) {
           if (err) { console.log('Timeline pin failed: ' + err); }
           sendToWatch(KEY_RESPONSE, truncateForWatch(displayText));
         });
