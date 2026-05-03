@@ -39,6 +39,10 @@
 #define KEY_ALARM_WAKEUP      13
 #define KEY_ALARM_LABEL       14
 #define KEY_ALARM_DISMISSED   15
+// Delete keys (watch→phone: index of item to remove from sorted list)
+#define KEY_REMINDER_DELETE   16
+#define KEY_TIMER_DELETE      17
+#define KEY_ALARM_DELETE      18
 
 // Persist keys for vibrating alarm state
 #define PERSIST_KEY_ALARM_WAKEUP_ID  1

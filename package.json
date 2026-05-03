@@ -47,7 +47,10 @@
       "KEY_TOKENS_DATA":       12,
       "KEY_ALARM_WAKEUP":      13,
       "KEY_ALARM_LABEL":       14,
-      "KEY_ALARM_DISMISSED":   15
+      "KEY_ALARM_DISMISSED":   15,
+      "KEY_REMINDER_DELETE":   16,
+      "KEY_TIMER_DELETE":      17,
+      "KEY_ALARM_DELETE":      18
     },
     "resources": {
       "media": [

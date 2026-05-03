@@ -1,120 +1,93 @@
 #include "hb-mabelAI.h"
 
-// ---- Private state ----
-static char            s_alarms_buffer[1804];
-static TextLayer      *s_alarms_label;
-static ScrollLayer    *s_scroll_layer;
-static TextLayer      *s_alarms_layer;
-static ActionBarLayer *s_alarms_action_bar;
+#define MAX_LIST_ITEMS 20
 
-// ---- Private: push buffer contents into the layers ----
+typedef struct {
+  char title[80];
+  char subtitle[24];
+} ListItem;
 
-static void refresh_alarms_layers(void) {
-  if (!s_alarms_layer || !s_scroll_layer) return;
-  text_layer_set_text(s_alarms_layer, s_alarms_buffer);
-  GRect bounds = layer_get_bounds(scroll_layer_get_layer(s_scroll_layer));
-  text_layer_set_size(s_alarms_layer, GSize(bounds.size.w, 8000));
-  GSize text_size = text_layer_get_content_size(s_alarms_layer);
-  text_layer_set_size(s_alarms_layer, GSize(bounds.size.w, text_size.h + 10));
-  scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, text_size.h + 20));
-  scroll_layer_set_content_offset(s_scroll_layer, GPointZero, false);
+static char              s_alarms_buffer[1804];
+static ListItem          s_items[MAX_LIST_ITEMS];
+static int               s_item_count = 0;
+static SimpleMenuItem    s_menu_items[MAX_LIST_ITEMS];
+static SimpleMenuSection s_sections[1];
+static SimpleMenuLayer  *s_menu_layer;
+
+static void alarm_selected(int index, void *context) {
+  if (index < 0 || index >= s_item_count) return;
+  if (!strchr(s_items[index].subtitle, '/')) return;
+  DictionaryIterator *iter;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) return;
+  int32_t val = (int32_t)index;
+  dict_write_int(iter, KEY_ALARM_DELETE, &val, sizeof(int32_t), true);
+  app_message_outbox_send();
 }
 
-// ---- Public: copy new alarms text into the buffer, then refresh ----
+static void build_menu(void) {
+  s_item_count = 0;
+  char *p = s_alarms_buffer;
+  while (*p && s_item_count < MAX_LIST_ITEMS) {
+    char *sep = strstr(p, "\n\n");
+    int chunk_len = sep ? (int)(sep - p) : (int)strlen(p);
+    char *nl = memchr(p, '\n', (size_t)chunk_len);
+    if (nl) {
+      int tlen = (int)(nl - p);
+      int slen = chunk_len - tlen - 1;
+      if (tlen < 0) tlen = 0;
+      if (slen < 0) slen = 0;
+      snprintf(s_items[s_item_count].title,    sizeof(s_items[0].title),    "%.*s", tlen, p);
+      snprintf(s_items[s_item_count].subtitle, sizeof(s_items[0].subtitle), "%.*s", slen, nl + 1);
+    } else {
+      snprintf(s_items[s_item_count].title, sizeof(s_items[0].title), "%.*s", chunk_len, p);
+      s_items[s_item_count].subtitle[0] = '\0';
+    }
+    s_item_count++;
+    p = sep ? sep + 2 : p + chunk_len;
+    if (!sep) break;
+  }
+
+  bool has_real_items = false;
+  for (int i = 0; i < s_item_count; i++) {
+    s_menu_items[i] = (SimpleMenuItem){
+      .title    = s_items[i].title,
+      .subtitle = s_items[i].subtitle[0] ? s_items[i].subtitle : NULL,
+      .callback = alarm_selected,
+    };
+    if (strchr(s_items[i].subtitle, '/')) has_real_items = true;
+  }
+  s_sections[0] = (SimpleMenuSection){
+    .title     = has_real_items ? "select to delete" : NULL,
+    .items     = s_menu_items,
+    .num_items = (uint32_t)s_item_count,
+  };
+}
 
 void show_alarms(const char *text) {
   snprintf(s_alarms_buffer, sizeof(s_alarms_buffer), "%s", text);
-  refresh_alarms_layers();
+  build_menu();
+  if (s_menu_layer) {
+    menu_layer_reload_data(simple_menu_layer_get_menu_layer(s_menu_layer));
+  }
 }
-
-// ---- Click handlers ----
-
-static void alarms_up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  GPoint offset = scroll_layer_get_content_offset(s_scroll_layer);
-#ifdef PBL_ROUND
-  scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y + 30), false);
-#else
-  scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y + 30), true);
-#endif
-}
-
-static void alarms_down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  GPoint offset = scroll_layer_get_content_offset(s_scroll_layer);
-#ifdef PBL_ROUND
-  scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y - 30), false);
-#else
-  scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, offset.y - 30), true);
-#endif
-}
-
-static void alarms_click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_UP,   alarms_up_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, alarms_down_click_handler);
-}
-
-// ---- Window lifecycle ----
 
 static void alarms_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect  bounds       = layer_get_bounds(window_layer);
-
-  s_alarms_action_bar = action_bar_layer_create();
-  action_bar_layer_set_click_config_provider(s_alarms_action_bar, alarms_click_config_provider);
-  action_bar_layer_set_icon(s_alarms_action_bar, BUTTON_ID_UP,   s_icon_up);
-  action_bar_layer_set_icon(s_alarms_action_bar, BUTTON_ID_DOWN, s_icon_down);
-
-  int content_w = bounds.size.w - ACTION_BAR_WIDTH;
-  int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
-#ifdef PBL_PLATFORM_GABBRO
-  int h_pad = 66, right_pad = 38;
-#elif defined(PBL_ROUND)
-  int h_pad = 36, right_pad = 2;
-#else
-  int h_pad = 2,  right_pad = 2;
-#endif
-  int text_w   = content_w - h_pad - right_pad;
-  int label_h  = 18;
-  int scroll_h = content_h - label_h - 6;
-
-  s_alarms_label = text_layer_create(
-      GRect(h_pad, STATUS_BAR_LAYER_HEIGHT + 2, text_w, label_h));
-  text_layer_set_font(s_alarms_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text_color(s_alarms_label, COLOR_TEXT_LABEL);
-  text_layer_set_background_color(s_alarms_label, GColorClear);
-  text_layer_set_text(s_alarms_label, STR_SECTION_ALARMS);
-  layer_add_child(window_layer, text_layer_get_layer(s_alarms_label));
-
-  s_scroll_layer = scroll_layer_create(
-      GRect(h_pad, STATUS_BAR_LAYER_HEIGHT + label_h + 4, text_w, scroll_h));
-  layer_add_child(window_layer, scroll_layer_get_layer(s_scroll_layer));
-
-  s_alarms_layer = text_layer_create(GRect(0, 0, text_w, 2000));
-  text_layer_set_font(s_alarms_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_color(s_alarms_layer, COLOR_TEXT);
-  text_layer_set_background_color(s_alarms_layer, GColorClear);
-  text_layer_set_overflow_mode(s_alarms_layer, GTextOverflowModeWordWrap);
-  scroll_layer_add_child(s_scroll_layer, text_layer_get_layer(s_alarms_layer));
-
-  refresh_alarms_layers();
-
+  build_menu();
+  s_menu_layer = simple_menu_layer_create(
+      GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT),
+      window, s_sections, 1, NULL);
+  layer_add_child(window_layer, simple_menu_layer_get_layer(s_menu_layer));
   s_alarms_status_bar_layer = create_status_bar(window_layer, bounds.size.w);
-  action_bar_layer_add_to_window(s_alarms_action_bar, window);
 }
 
 static void alarms_window_unload(Window *window) {
   layer_destroy(s_alarms_status_bar_layer);
   s_alarms_status_bar_layer = NULL;
-  text_layer_destroy(s_alarms_label);
-  s_alarms_label = NULL;
-  text_layer_destroy(s_alarms_layer);
-  s_alarms_layer = NULL;
-  scroll_layer_destroy(s_scroll_layer);
-  s_scroll_layer = NULL;
-  action_bar_layer_destroy(s_alarms_action_bar);
-  s_alarms_action_bar = NULL;
+  simple_menu_layer_destroy(s_menu_layer);
+  s_menu_layer = NULL;
 }
-
-// ---- Public: return handlers for use in init ----
 
 WindowHandlers alarms_window_get_handlers(void) {
   return (WindowHandlers){
