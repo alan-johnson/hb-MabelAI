@@ -90,7 +90,7 @@ function askGemini(query, history, settings, onSuccess, onError) {
     generationConfig:   { maxOutputTokens: settings.maxTokens }
   });
 
-  var geminiModel = /^gemini/i.test(settings.model) ? settings.model : 'gemini-2.0-flash';
+  var geminiModel = /^gemini/i.test(settings.model) ? settings.model : 'gemini-2.5-flash';
   var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
     geminiModel + ':generateContent?key=' + settings.apiKey;
 
